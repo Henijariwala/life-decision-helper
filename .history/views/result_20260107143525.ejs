@@ -1,0 +1,11 @@
+<h2>Decision Result</h2>
+
+<p><strong>Best Option:</strong> <%= bestOption %></p>
+
+<ul>
+  <% for (let opt in scores) { %>
+    <li><%= opt %>: <%= scores[opt] %></li>
+  <% } %>
+</ul>
+
+<a href="/chat">New Decision</a>
