@@ -9,6 +9,22 @@ const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
+// AI INTRO / BEHAVIOR PROMPT
+const SYSTEM_PROMPT = `
+You are a kind, calm, and supportive AI assistant created to help people think clearly
+and make better life decisions.
+
+Your role is to:
+- Listen carefully without judgment
+- Offer emotional reassurance and motivation
+- Guide users step by step toward clarity
+- Help evaluate options logically and calmly
+
+You do not force decisions.
+You help users understand and choose for themselves.
+`;
+
+// Session-based flow
 function getFlow(req) {
   if (!req.session.flow) {
     req.session.flow = {
@@ -43,12 +59,12 @@ router.post("/chat", async (req, res) => {
 
       case "EMOTIONAL":
         if (!openai) {
-          reply = "I’m here to help. Let’s calmly think this through together.";
+          reply = "I’m here to help. Let’s calmly think through this together.";
         } else {
           const ai = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
-              { role: "system", content: "You are a calm, supportive life coach." },
+              { role: "system", content: SYSTEM_PROMPT },
               { role: "user", content: userMsg }
             ]
           });
@@ -58,7 +74,7 @@ router.post("/chat", async (req, res) => {
         break;
 
       case "OPTIONS":
-        reply = "Enter your options (comma separated).";
+        reply = "Please enter your decision options (comma separated).";
         flow.step = "CRITERIA";
         break;
 
@@ -70,7 +86,7 @@ router.post("/chat", async (req, res) => {
 
       case "WEIGHTS":
         flow.criteria = userMsg.split(",").map(v => v.trim());
-        reply = `Enter weights as JSON (example: {"Salary":5})`;
+        reply = `Enter weights as JSON (example: {"Salary":5,"Growth":4})`;
         flow.step = "RATINGS";
         break;
 
@@ -96,7 +112,7 @@ router.post("/chat", async (req, res) => {
     }
 
   } catch (err) {
-    reply = "⚠️ Input error. Please follow the format carefully.";
+    reply = "⚠️ Something went wrong. Please check your input format and try again.";
   }
 
   flow.messages.push({ role: "Bot", text: reply });
@@ -105,7 +121,10 @@ router.post("/chat", async (req, res) => {
 
 router.get("/history", async (req, res) => {
   const { db } = require("../firebase/admin");
-  const snap = await db.collection("decisions").orderBy("createdAt", "desc").get();
+  const snap = await db.collection("decisions")
+    .orderBy("createdAt", "desc")
+    .get();
+
   res.render("history", { decisions: snap.docs.map(d => d.data()) });
 });
 
