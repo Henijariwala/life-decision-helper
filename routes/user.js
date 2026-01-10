@@ -5,87 +5,13 @@ const OpenAI = require("openai");
 const calculateDecision = require("../utils/decisionLogic");
 const saveDecision = require("../utils/saveDecision");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
-let session = {
-  step: "EMOTIONAL",
-  messages: [],
-  options: [],
-  criteria: [],
-  weights: {},
-  ratings: {}
-};
-
-router.get("/", (req, res) => {
-  res.render("index");
-});
-
-router.get("/chat", (req, res) => {
-  res.render("chat", { messages: session.messages });
-});
-
-router.post("/chat", async (req, res) => {
-  const userMsg = req.body.message;
-  session.messages.push({ role: "User", text: userMsg });
-
-  let botReply = "";
-
-  if (session.step === "EMOTIONAL") {
-    const ai = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a calm, supportive life guide." },
-        { role: "user", content: userMsg }
-      ]
-    });
-
-    botReply = ai.choices[0].message.content;
-    session.step = "OPTIONS";
-  }
-
-  else if (session.step === "OPTIONS") {
-    botReply = "Enter your decision options separated by commas.";
-    session.step = "CRITERIA";
-  }
-
-  else if (session.step === "CRITERIA") {
-    session.options = userMsg.split(",").map(o => o.trim());
-    botReply = "Enter decision criteria separated by commas.";
-    session.step = "WEIGHTS";
-  }
-
-  else if (session.step === "WEIGHTS") {
-    session.criteria = userMsg.split(",").map(c => c.trim());
-    botReply = 'Enter weights as JSON. Example: {"Salary":5,"Growth":4}';
-    session.step = "RATINGS";
-  }
-
-  else if (session.step === "RATINGS") {
-    session.weights = JSON.parse(userMsg);
-    botReply =
-      'Enter ratings as JSON. Example: {"Job A":{"Salary":4,"Growth":5}}';
-    session.step = "CALCULATE";
-  }
-
-  else if (session.step === "CALCULATE") {
-    session.ratings = JSON.parse(userMsg);
-
-    const result = calculateDecision(
-      session.options,
-      session.criteria,
-      session.weights,
-      session.ratings
-    );
-
-    await saveDecision({
-      options: session.options,
-      criteria: session.criteria,
-      result
-    });
-
-    session = {
+function getFlow(req) {
+  if (!req.session.flow) {
+    req.session.flow = {
       step: "EMOTIONAL",
       messages: [],
       options: [],
@@ -93,12 +19,94 @@ router.post("/chat", async (req, res) => {
       weights: {},
       ratings: {}
     };
+  }
+  return req.session.flow;
+}
 
-    return res.render("result", result);
+router.get("/", (req, res) => {
+  res.render("index");
+});
+
+router.get("/chat", (req, res) => {
+  res.render("chat", { messages: getFlow(req).messages });
+});
+
+router.post("/chat", async (req, res) => {
+  const flow = getFlow(req);
+  const userMsg = req.body.message;
+
+  flow.messages.push({ role: "User", text: userMsg });
+  let reply = "";
+
+  try {
+    switch (flow.step) {
+
+      case "EMOTIONAL":
+        if (!openai) {
+          reply = "I’m here to help. Let’s calmly think this through together.";
+        } else {
+          const ai = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: "You are a calm, supportive life coach." },
+              { role: "user", content: userMsg }
+            ]
+          });
+          reply = ai.choices[0].message.content;
+        }
+        flow.step = "OPTIONS";
+        break;
+
+      case "OPTIONS":
+        reply = "Enter your options (comma separated).";
+        flow.step = "CRITERIA";
+        break;
+
+      case "CRITERIA":
+        flow.options = userMsg.split(",").map(v => v.trim());
+        reply = "Enter decision criteria (comma separated).";
+        flow.step = "WEIGHTS";
+        break;
+
+      case "WEIGHTS":
+        flow.criteria = userMsg.split(",").map(v => v.trim());
+        reply = `Enter weights as JSON (example: {"Salary":5})`;
+        flow.step = "RATINGS";
+        break;
+
+      case "RATINGS":
+        flow.weights = JSON.parse(userMsg);
+        reply = `Enter ratings as JSON (example: {"Option A":{"Salary":4}})`;
+        flow.step = "CALCULATE";
+        break;
+
+      case "CALCULATE":
+        flow.ratings = JSON.parse(userMsg);
+
+        const result = calculateDecision(
+          flow.options,
+          flow.criteria,
+          flow.weights,
+          flow.ratings
+        );
+
+        await saveDecision(result);
+        req.session.flow = null;
+        return res.render("result", result);
+    }
+
+  } catch (err) {
+    reply = "⚠️ Input error. Please follow the format carefully.";
   }
 
-  session.messages.push({ role: "Bot", text: botReply });
-  res.render("chat", { messages: session.messages });
+  flow.messages.push({ role: "Bot", text: reply });
+  res.render("chat", { messages: flow.messages });
+});
+
+router.get("/history", async (req, res) => {
+  const { db } = require("../firebase/admin");
+  const snap = await db.collection("decisions").orderBy("createdAt", "desc").get();
+  res.render("history", { decisions: snap.docs.map(d => d.data()) });
 });
 
 module.exports = router;

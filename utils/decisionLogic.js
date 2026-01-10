@@ -1,10 +1,10 @@
-function calculateDecision(options, criteria, weights, ratings) {
-  let scores = {};
+module.exports = function (options, criteria, weights, ratings) {
+  const scores = {};
 
-  options.forEach(opt => {
-    scores[opt] = 0;
+  options.forEach(o => {
+    scores[o] = 0;
     criteria.forEach(c => {
-      scores[opt] += weights[c] * ratings[opt][c];
+      scores[o] += (weights[c] || 0) * (ratings[o]?.[c] || 0);
     });
   });
 
@@ -12,7 +12,5 @@ function calculateDecision(options, criteria, weights, ratings) {
     scores[a] > scores[b] ? a : b
   );
 
-  return { scores, bestOption };
-}
-
-module.exports = calculateDecision;
+  return { options, criteria, scores, bestOption };
+};

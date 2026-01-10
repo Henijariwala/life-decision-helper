@@ -1,15 +1,7 @@
-function requireUser(req, res, next) {
-  if (!req.headers.userid) {
-    return res.redirect("/");
+module.exports = async (req, res, next) => {
+  if (!req.session.user || !req.session.user.admin) {
+    return res.status(403).send("Access Denied");
   }
   next();
-}
+};
 
-function requireAdmin(req, res, next) {
-  if (req.headers.role !== "admin") {
-    return res.send("Access Denied");
-  }
-  next();
-}
-
-module.exports = { requireUser, requireAdmin };

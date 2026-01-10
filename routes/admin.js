@@ -8,7 +8,8 @@ router.get("/", async (req, res) => {
 
   res.render("admin", {
     totalUsers: users.size,
-    totalDecisions: decisions.size
+    totalDecisions: decisions.size,
+    categories: {}
   });
 });
 

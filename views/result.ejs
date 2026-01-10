@@ -1,11 +1,24 @@
-<h2>Decision Result</h2>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Decision Result</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="center">
 
-<p><strong>Best Option:</strong> <%= bestOption %></p>
+<h2>✅ Best Decision</h2>
 
+<h1 class="highlight"><%= bestOption %></h1>
+
+<h3>Scores</h3>
 <ul>
-  <% for (let opt in scores) { %>
-    <li><%= opt %>: <%= scores[opt] %></li>
-  <% } %>
+  <% Object.keys(scores).forEach(opt => { %>
+    <li><strong><%= opt %></strong>: <%= scores[opt] %></li>
+  <% }) %>
 </ul>
 
-<a href="/chat">New Decision</a>
+<a href="/chat" class="btn">New Decision</a>
+<a href="/history" class="btn secondary">View History</a>
+
+</body>
+</html>

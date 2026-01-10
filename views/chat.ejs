@@ -1,10 +1,33 @@
-<h2>Chat</h2>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Decision Chat</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
 
-<% messages.forEach(m => { %>
-  <p><strong><%= m.role %>:</strong> <%= m.text %></p>
-<% }) %>
+<h2>💬 Decision Chat</h2>
 
-<form method="POST" action="/chat">
-  <input name="message" required />
+<div class="chat-box">
+  <% messages.forEach(m => { %>
+    <div class="message <%= m.role.toLowerCase() %>">
+      <strong><%= m.role %>:</strong> <%= m.text %>
+    </div>
+  <% }) %>
+</div>
+
+<form method="POST" action="/chat" class="chat-form">
+  <input 
+    type="text" 
+    name="message" 
+    placeholder="Type your message..." 
+    required 
+    autofocus
+  />
   <button type="submit">Send</button>
 </form>
+
+<a href="/" class="link">← Back</a>
+
+</body>
+</html>

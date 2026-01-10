@@ -1,10 +1,8 @@
 const { db } = require("../firebase/admin");
 
-async function saveDecision(data) {
+module.exports = async function (data) {
   await db.collection("decisions").add({
     ...data,
     createdAt: new Date()
   });
-}
-
-module.exports = saveDecision;
+};
