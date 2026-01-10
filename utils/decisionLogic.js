@@ -1,10 +1,10 @@
 module.exports = function (options, criteria, weights, ratings) {
   const scores = {};
 
-  options.forEach(option => {
-    scores[option] = 0;
+  options.forEach(opt => {
+    scores[opt] = 0;
     criteria.forEach(c => {
-      scores[option] += (weights[c] || 0) * (ratings[option]?.[c] || 0);
+      scores[opt] += (weights[c] || 0) * (ratings[opt]?.[c] || 0);
     });
   });
 

@@ -5,26 +5,25 @@ const OpenAI = require("openai");
 const calculateDecision = require("../utils/decisionLogic");
 const saveDecision = require("../utils/saveDecision");
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+// ---------- OPENAI SETUP ----------
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ OPENAI_API_KEY IS MISSING");
+}
 
-// AI INTRO / BEHAVIOR PROMPT
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+// ---------- AI SYSTEM PROMPT ----------
 const SYSTEM_PROMPT = `
-You are a kind, calm, and supportive AI assistant created to help people think clearly
+You are a calm, kind, and supportive AI created to help people think clearly
 and make better life decisions.
 
-Your role is to:
-- Listen carefully without judgment
-- Offer emotional reassurance and motivation
-- Guide users step by step toward clarity
-- Help evaluate options logically and calmly
-
-You do not force decisions.
-You help users understand and choose for themselves.
+You listen carefully, reduce confusion, and guide users step by step.
+You never judge or force decisions.
 `;
 
-// Session-based flow
+// ---------- SESSION FLOW ----------
 function getFlow(req) {
   if (!req.session.flow) {
     req.session.flow = {
@@ -39,6 +38,7 @@ function getFlow(req) {
   return req.session.flow;
 }
 
+// ---------- ROUTES ----------
 router.get("/", (req, res) => {
   res.render("index");
 });
@@ -57,30 +57,28 @@ router.post("/chat", async (req, res) => {
   try {
     switch (flow.step) {
 
-      case "EMOTIONAL":
-        if (!openai) {
-          reply = "I’m here to help. Let’s calmly think through this together.";
-        } else {
-          const ai = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: SYSTEM_PROMPT },
-              { role: "user", content: userMsg }
-            ]
-          });
-          reply = ai.choices[0].message.content;
-        }
+      case "EMOTIONAL": {
+        const ai = await openai.chat.completions.create({
+          model: "gpt-4o-mini-2024-07-18",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userMsg }
+          ]
+        });
+
+        reply = ai.choices[0].message.content;
         flow.step = "OPTIONS";
         break;
+      }
 
       case "OPTIONS":
-        reply = "Please enter your decision options (comma separated).";
+        reply = "Please enter your options separated by commas.";
         flow.step = "CRITERIA";
         break;
 
       case "CRITERIA":
         flow.options = userMsg.split(",").map(v => v.trim());
-        reply = "Enter decision criteria (comma separated).";
+        reply = "Enter decision criteria separated by commas.";
         flow.step = "WEIGHTS";
         break;
 
@@ -112,20 +110,16 @@ router.post("/chat", async (req, res) => {
     }
 
   } catch (err) {
-    reply = "⚠️ Something went wrong. Please check your input format and try again.";
+    console.error("AI ERROR:", err.message);
+    reply = "⚠️ AI is temporarily unavailable. Please try again.";
   }
 
   flow.messages.push({ role: "Bot", text: reply });
   res.render("chat", { messages: flow.messages });
 });
 
-router.get("/history", async (req, res) => {
-  const { db } = require("../firebase/admin");
-  const snap = await db.collection("decisions")
-    .orderBy("createdAt", "desc")
-    .get();
-
-  res.render("history", { decisions: snap.docs.map(d => d.data()) });
+router.get("/history", (req, res) => {
+  res.render("history", { decisions: [] });
 });
 
 module.exports = router;
