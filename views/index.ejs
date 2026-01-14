@@ -1,21 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Life Decision Helper</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="center">
 
- <h1>🧭 Life Decision Helper</h1>
+  <h1>🧭 Life Decision Helper</h1>
+  <p class="subtitle">Think clearly. Decide calmly.</p>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+  <div class="auth-card">
+    <input
+      id="email"
+      type="email"
+      placeholder="Email address"
+      required
+    />
 
-<button onclick="login(email.value,password.value)">Login</button>
-<button onclick="register(email.value,password.value)">Register</button>
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+      required
+    />
 
-<script type="module" src="/auth.js"></script>
+    <button id="loginBtn"
+      onclick="login(email.value, password.value)">
+      Login
+    </button>
 
+    <button class="secondary"
+      onclick="register(email.value, password.value)">
+      Register
+    </button>
 
+    <p id="authMessage" class="message"></p>
+  </div>
+
+  <script type="module" src="/auth.js"></script>
 </body>
 </html>

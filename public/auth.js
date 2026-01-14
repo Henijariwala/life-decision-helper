@@ -32,3 +32,27 @@ window.logout = async () => {
   document.cookie = "token=; Max-Age=0";
   location.href = "/";
 };
+const showMessage = (msg) => {
+  const el = document.getElementById("authMessage");
+  if (el) el.innerText = msg;
+};
+
+window.login = async (email, password) => {
+  try {
+    const user = await signInWithEmailAndPassword(auth, email, password);
+    const token = await user.user.getIdToken();
+    document.cookie = `token=${token}; path=/`;
+    location.href = "/chat";
+  } catch (err) {
+    showMessage(err.message);
+  }
+};
+
+window.register = async (email, password) => {
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    showMessage("Account created. Please login.");
+  } catch (err) {
+    showMessage(err.message);
+  }
+};
