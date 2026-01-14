@@ -6,11 +6,16 @@
 </head>
 <body class="center">
 
-  <h1>🧭 Life Decision Helper</h1>
-  <p>Talk it out. Decide with clarity.</p>
+ <h1>🧭 Life Decision Helper</h1>
 
-  <a href="/chat" class="btn">Start Decision</a>
-  <a href="/history" class="btn secondary">View History</a>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login(email.value,password.value)">Login</button>
+<button onclick="register(email.value,password.value)">Register</button>
+
+<script type="module" src="/auth.js"></script>
+
 
 </body>
 </html>
