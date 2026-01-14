@@ -1,13 +1,9 @@
-const { auth } = require("../firebase/admin");
+import { onAuthStateChanged } from "firebase/auth";
 
-module.exports = async (req, res, next) => {
-  try {
-    const token = req.cookies.token;
-    if (!token) return res.redirect("/");
-
-    req.user = await auth.verifyIdToken(token);
-    next();
-  } catch {
-    res.redirect("/");
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const token = await user.getIdToken();
+    document.cookie = `token=${token}; path=/; Secure; SameSite=Lax`;
+    location.href = "/chat";
   }
-};
+});
