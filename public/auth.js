@@ -7,9 +7,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT"
+  apiKey: "AIzaSyD4zyIOYaquJ_U9L5iWbPs-Dr-6S7Lfdxg",
+  authDomain: "life-decision-helper.firebaseapp.com",
+  projectId: "life-decision-helper"
 };
 
 const app = initializeApp(firebaseConfig);
