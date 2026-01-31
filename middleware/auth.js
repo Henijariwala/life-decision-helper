@@ -1,9 +1,22 @@
-import { onAuthStateChanged } from "firebase/auth";
+const admin = require("../firebaseAdmin");
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const token = await user.getIdToken();
-    document.cookie = `token=${token}; path=/; Secure; SameSite=Lax`;
-    location.href = "/chat";
+module.exports = async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.redirect("/");
+    }
+
+    // ✅ Verify Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+
+    // decodedToken contains: uid, email, etc.
+    req.user = decodedToken;
+
+    next();
+  } catch (err) {
+    console.error("AUTH ERROR:", err.message);
+    res.redirect("/");
   }
-});
+};
