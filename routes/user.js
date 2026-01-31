@@ -44,7 +44,7 @@ router.post("/chat", requireAuth, async (req, res) => {
       chatId = ""
     } = req.body;
 
-    // Safe JSON parse
+    // ---------- SAFE JSON PARSE ----------
     try {
       chatMessages = JSON.parse(messages);
       if (!Array.isArray(chatMessages)) chatMessages = [];
@@ -52,35 +52,39 @@ router.post("/chat", requireAuth, async (req, res) => {
       chatMessages = [];
     }
 
-    // Add user message
+    // ---------- ADD USER MESSAGE ----------
     chatMessages.push({
       role: "User",
       text: message,
       createdAt: Date.now()
     });
 
-    // ---------- OPENAI CALL (SAFE) ----------
-    try {
-      const ai = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...chatMessages.map(m => ({
-            role: m.role === "User" ? "user" : "assistant",
-            content: m.text
-          }))
-        ]
-      });
+    // ---------- OPENAI (SAFE + OPTIONAL) ----------
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const ai = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...chatMessages.map(m => ({
+              role: m.role === "User" ? "user" : "assistant",
+              content: m.text
+            }))
+          ]
+        });
 
-      reply = ai.choices[0].message.content;
+        reply = ai.choices[0].message.content;
 
-    } catch (err) {
-      console.error("OPENAI ERROR:", err.message);
+      } catch (err) {
+        console.error("OPENAI ERROR:", err.code || err.message);
 
-      // Graceful fallback
-      reply =
-        "⚠️ AI is temporarily unavailable (quota or network issue).\n\n" +
-        "Your message has been saved. Please try again later.";
+        reply =
+          "⚠️ AI is temporarily unavailable (quota or network issue).\n\n" +
+          "Your message was saved. Please try again later.";
+      }
+    } else {
+      // Demo mode
+      reply = "🤖 (Demo mode) I received your message.";
     }
 
     // ---------- STEP PROGRESSION ----------
@@ -92,20 +96,26 @@ router.post("/chat", requireAuth, async (req, res) => {
       currentStep = "OPTIONS";
     }
 
-    // Add bot message
+    // ---------- ADD BOT MESSAGE ----------
     chatMessages.push({
       role: "Bot",
       text: reply,
       createdAt: Date.now()
     });
 
-    // ---------- SAVE CHAT ----------
-    const newChatId = await saveChat({
-      email: req.user.email,
-      chatId,
-      messages: chatMessages,
-      step: currentStep
-    });
+    // ---------- SAVE CHAT (SAFE) ----------
+    let newChatId = chatId;
+
+    try {
+      newChatId = await saveChat({
+        email: req.user.email,
+        chatId,
+        messages: chatMessages,
+        step: currentStep
+      });
+    } catch (err) {
+      console.error("FIRESTORE SAVE ERROR:", err.message);
+    }
 
     res.render("chat", {
       messages: chatMessages,
@@ -137,8 +147,9 @@ router.get("/history", requireAuth, async (req, res) => {
     }));
 
     res.render("history", { decisions });
+
   } catch (err) {
-    console.error("HISTORY ERROR:", err);
+    console.error("HISTORY ERROR:", err.message);
     res.status(500).send("Failed to load history");
   }
 });
