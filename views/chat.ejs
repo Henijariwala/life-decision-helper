@@ -3,11 +3,16 @@
 <head>
   <title>Decision Chat</title>
   <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/auth.js"></script>
 </head>
 <body>
 
 <h2>💬 Decision Chat</h2>
 
+<!-- SIGN OUT -->
+<button onclick="logout()" style="float:right">🚪 Sign Out</button>
+
+<!-- CHAT BOX -->
 <div class="chat-box">
   <% messages.forEach(m => { %>
     <div class="message <%= m.role.toLowerCase() %>">
@@ -16,14 +21,21 @@
   <% }) %>
 </div>
 
+<!-- CHAT FORM -->
 <form method="POST" action="/chat" class="chat-form">
-  <input 
-    type="text" 
-    name="message" 
-    placeholder="Type your message..." 
-    required 
+
+  <!-- 🔥 REQUIRED: persist state -->
+  <input type="hidden" name="step" value="<%= step %>">
+  <input type="hidden" name="messages" value='<%= JSON.stringify(messages) %>'>
+
+  <input
+    type="text"
+    name="message"
+    placeholder="Type your message..."
+    required
     autofocus
   />
+
   <button type="submit">Send</button>
 </form>
 

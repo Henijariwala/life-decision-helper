@@ -13,41 +13,37 @@ You talk naturally and support emotions.
 Only start decision-making when user is ready.
 `;
 
-function getFlow(req) {
-  if (!req.session.flow) {
-    req.session.flow = {
-      step: "EMOTIONAL",
-      messages: [],
-      options: [],
-      criteria: [],
-      weights: {},
-      ratings: {}
-    };
-  }
-  return req.session.flow;
-}
-
-router.get("/", (req, res) => res.render("index"));
-
-router.get("/chat", requireAuth, (req, res) => {
-  const flow = getFlow(req);
-  res.render("chat", { messages: flow.messages, step: flow.step });
+// ---------- HOME ----------
+router.get("/", (req, res) => {
+  res.render("index");
 });
 
-router.post("/chat", requireAuth, async (req, res) => {
-  const flow = getFlow(req);
-  const userMsg = req.body.message;
-  flow.messages.push({ role: "User", text: userMsg });
+// ---------- CHAT PAGE ----------
+router.get("/chat", requireAuth, (req, res) => {
+  res.render("chat", {
+    messages: [],
+    step: "EMOTIONAL"
+  });
+});
 
+// ---------- CHAT POST ----------
+router.post("/chat", requireAuth, async (req, res) => {
+  const { message, step, messages, options, criteria, weights } = req.body;
+
+  let currentStep = step || "EMOTIONAL";
+  let chatMessages = messages ? JSON.parse(messages) : [];
   let reply = "";
 
+  chatMessages.push({ role: "User", text: message });
+
   try {
-    if (flow.step === "EMOTIONAL") {
+    // ---------- EMOTIONAL ----------
+    if (currentStep === "EMOTIONAL") {
       const ai = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...flow.messages.map(m => ({
+          ...chatMessages.map(m => ({
             role: m.role === "User" ? "user" : "assistant",
             content: m.text
           }))
@@ -56,50 +52,63 @@ router.post("/chat", requireAuth, async (req, res) => {
 
       reply = ai.choices[0].message.content;
 
-      if (/help me decide|i'm ready|start decision/i.test(userMsg)) {
+      if (/help me decide|i'm ready|start decision/i.test(message)) {
         reply += "\n\n👉 Enter your options separated by commas.";
-        flow.step = "OPTIONS";
+        currentStep = "OPTIONS";
       }
     }
 
-    else if (flow.step === "OPTIONS") {
-      flow.options = userMsg.split(",").map(v => v.trim());
+    // ---------- OPTIONS ----------
+    else if (currentStep === "OPTIONS") {
+      chatMessages.options = message.split(",").map(v => v.trim());
       reply = "Enter criteria (comma-separated).";
-      flow.step = "CRITERIA";
+      currentStep = "CRITERIA";
     }
 
-    else if (flow.step === "CRITERIA") {
-      flow.criteria = userMsg.split(",").map(v => v.trim());
+    // ---------- CRITERIA ----------
+    else if (currentStep === "CRITERIA") {
+      chatMessages.criteria = message.split(",").map(v => v.trim());
       reply = "Enter weights as JSON.";
-      flow.step = "WEIGHTS";
+      currentStep = "WEIGHTS";
     }
 
-    else if (flow.step === "WEIGHTS") {
-      flow.weights = JSON.parse(userMsg);
+    // ---------- WEIGHTS ----------
+    else if (currentStep === "WEIGHTS") {
+      chatMessages.weights = JSON.parse(message);
       reply = "Enter ratings as JSON.";
-      flow.step = "RATINGS";
+      currentStep = "RATINGS";
     }
 
-    else if (flow.step === "RATINGS") {
-      flow.ratings = JSON.parse(userMsg);
+    // ---------- RATINGS ----------
+    else if (currentStep === "RATINGS") {
+      const ratings = JSON.parse(message);
+
       const result = calculateDecision(
-        flow.options,
-        flow.criteria,
-        flow.weights,
-        flow.ratings
+        chatMessages.options,
+        chatMessages.criteria,
+        chatMessages.weights,
+        ratings
       );
-      await saveDecision(result, req.user.uid);
-      delete req.session.flow;
+
+      await saveDecision(result, req.user.email);
+
       return res.render("result", result);
     }
-  } catch {
+
+  } catch (err) {
+    console.error(err);
     reply = "❌ Invalid input. Please try again.";
   }
 
-  flow.messages.push({ role: "Bot", text: reply });
-  res.render("chat", { messages: flow.messages, step: flow.step });
+  chatMessages.push({ role: "Bot", text: reply });
+
+  res.render("chat", {
+    messages: chatMessages,
+    step: currentStep
+  });
 });
 
+// ---------- HISTORY ----------
 router.get("/history", requireAuth, async (req, res) => {
   res.render("history", { decisions: [] });
 });
