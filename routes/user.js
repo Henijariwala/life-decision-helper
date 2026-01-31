@@ -31,7 +31,7 @@ router.post("/chat", requireAuth, async (req, res) => {
       chatId = ""
     } = req.body;
 
-    // ---------- SAFE PARSE ----------
+    // ---------- SAFE JSON PARSE ----------
     try {
       chatMessages = JSON.parse(messages);
       if (!Array.isArray(chatMessages)) chatMessages = [];
@@ -46,20 +46,28 @@ router.post("/chat", requireAuth, async (req, res) => {
       createdAt: Date.now()
     });
 
-    // ---------- DEMO MODE BOT REPLY ----------
-    let reply =
-      "🤖 I’m here and listening.\n\n" +
-      "Tell me more about what’s on your mind.";
+    // ---------- SMART DEMO BOT LOGIC ----------
+    const text = message.toLowerCase();
+    let reply = "";
 
-    // ---------- STEP PROGRESSION ----------
-    if (
-      currentStep === "EMOTIONAL" &&
-      /help me decide|i'?m ready|start decision/i.test(message)
-    ) {
+    if (text.includes("chocolate")) {
       reply =
-        "Got it 👍\n\n" +
+        "🍫 **Let’s compare them:**\n\n" +
+        "• **Morde Dark Chocolate** – richer cocoa taste, better for mood, but contains sugar\n" +
+        "• **Amul Sugar Free** – better if you want to avoid sugar or manage diabetes\n\n" +
+        "👉 **Health priority:** Amul Sugar Free\n" +
+        "👉 **Taste priority:** Morde Dark Chocolate";
+    }
+    else if (text.includes("help me decide") || text.includes("i'm ready")) {
+      reply =
+        "Great 👍\n\n" +
         "👉 Please enter your options separated by commas.";
       currentStep = "OPTIONS";
+    }
+    else {
+      reply =
+        "🤖 I’m here to help you decide.\n\n" +
+        "Tell me what you’re confused about or what options you’re choosing between.";
     }
 
     // ---------- BOT MESSAGE ----------
