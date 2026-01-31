@@ -1,4 +1,5 @@
 const express = require("express");
+const admin = require("../firebaseAdmin");
 const OpenAI = require("openai");
 const requireAuth = require("../middleware/auth");
 const saveChat = require("../utils/saveChat");
