@@ -7,62 +7,19 @@
 </head>
 <body class="center">
 
-  <h1>🧭 Life Decision Helper</h1>
-  <p class="subtitle">Think clearly. Decide calmly.</p>
+<h1>🧭 Life Decision Helper</h1>
+<p class="subtitle">Think clearly. Decide calmly.</p>
 
-  <div class="auth-card">
+<div class="auth-card">
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
 
-    <!-- LOGGED OUT -->
-    <div id="loggedOut">
-      <input
-        id="email"
-        type="email"
-        placeholder="Email address"
-        autocomplete="username"
-      />
+  <button onclick="login()">🔐 Sign In</button>
+  <button class="secondary" onclick="createAccount()">✨ Create Account</button>
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Password"
-        autocomplete="current-password"
-      />
+  <p id="authMessage"></p>
+</div>
 
-      <button class="primary" onclick="login()">
-        🔐 Sign In
-      </button>
-
-      <button class="secondary" onclick="createAccount()">
-        ✨ Create Account
-      </button>
-    </div>
-
-    <!-- LOGGED IN -->
-    <div id="loggedIn" style="display:none">
-      <p class="welcome">✅ You are logged in</p>
-
-      <button onclick="location.href='/chat'">
-        💬 Go to Chat
-      </button>
-
-      <button class="secondary" onclick="logout()">
-        🚪 Sign Out
-      </button>
-    </div>
-
-    <p id="authMessage" class="message"></p>
-  </div>
-
-  <script type="module" src="/auth.js"></script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (document.cookie.includes("token=")) {
-        document.getElementById("loggedOut").style.display = "none";
-        document.getElementById("loggedIn").style.display = "block";
-      }
-    });
-  </script>
-
+<script type="module" src="/auth.js"></script>
 </body>
 </html>

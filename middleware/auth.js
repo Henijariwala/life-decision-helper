@@ -8,7 +8,7 @@ module.exports = async (req, res, next) => {
     const decoded = await admin.auth().verifyIdToken(token);
     req.user = decoded;
     next();
-  } catch {
-    res.redirect("/");
+  } catch (err) {
+    return res.redirect("/");
   }
 };
