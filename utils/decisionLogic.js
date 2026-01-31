@@ -11,5 +11,5 @@ module.exports = (options, criteria, weights, ratings) => {
   const bestOption = Object.keys(scores)
     .reduce((a, b) => scores[a] > scores[b] ? a : b);
 
-  return { options, criteria, scores, bestOption };
+  return { scores, bestOption };
 };

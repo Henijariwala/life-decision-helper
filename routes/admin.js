@@ -4,8 +4,7 @@ const adminOnly = require("../middleware/adminOnly");
 
 const router = express.Router();
 
-router.get("/", requireAuth, adminOnly, async (req, res) => {
-  // You can later fetch real stats from Firestore
+router.get("/", requireAuth, adminOnly, (req, res) => {
   res.render("admin", {
     totalUsers: 0,
     totalDecisions: 0,

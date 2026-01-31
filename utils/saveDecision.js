@@ -1,9 +1,21 @@
-const { db } = require("../firebase/admin");
+const admin = require("../firebaseAdmin");
 
-module.exports = async (decision, userId) => {
-  await db.collection("decisions").add({
-    ...decision,
-    userId,
-    createdAt: new Date()
-  });
+module.exports = async ({ email, chatId, messages, step }) => {
+  const db = admin.firestore();
+
+  const ref = chatId
+    ? db.collection("users").doc(email).collection("chats").doc(chatId)
+    : db.collection("users").doc(email).collection("chats").doc();
+
+  await ref.set(
+    {
+      messages,
+      step,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  return ref.id;
 };
