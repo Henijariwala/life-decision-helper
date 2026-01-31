@@ -1,130 +1,75 @@
-const express = require("express");
-const requireAuth = require("../middleware/auth");
-const saveChat = require("../utils/saveChat");
-const admin = require("../firebaseAdmin");
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const router = express.Router();
+/* 🔥 Firebase config */
+const firebaseConfig = {
+  apiKey: "AIzaSyD4zyIOYaquJ_U9L5iWbPs-Dr-6S7Lfdxg",
+  authDomain: "life-decision-helper.firebaseapp.com",
+  projectId: "life-decision-helper"
+};
 
-// ---------- HOME ----------
-router.get("/", (req, res) => {
-  res.render("index");
-});
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-// ---------- CHAT PAGE ----------
-router.get("/chat", requireAuth, (req, res) => {
-  res.render("chat", {
-    messages: [],
-    step: "EMOTIONAL",
-    chatId: ""
-  });
-});
+/* UI message helper */
+function showMessage(msg, isError = true) {
+  const el = document.getElementById("authMessage");
+  el.style.color = isError ? "red" : "green";
+  el.innerText = msg;
+}
 
-// ---------- CHAT POST ----------
-router.post("/chat", requireAuth, async (req, res) => {
-  let chatMessages = [];
-  let currentStep = req.body.step || "EMOTIONAL";
+/* 🔐 LOGIN */
+window.login = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!email || !password) {
+    showMessage("Please enter email and password");
+    return;
+  }
 
   try {
-    const {
-      message,
-      messages = "[]",
-      chatId = ""
-    } = req.body;
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const token = await userCred.user.getIdToken();
 
-    // ---------- SAFE JSON PARSE ----------
-    try {
-      chatMessages = JSON.parse(messages);
-      if (!Array.isArray(chatMessages)) chatMessages = [];
-    } catch {
-      chatMessages = [];
-    }
-
-    // ---------- USER MESSAGE ----------
-    chatMessages.push({
-      role: "User",
-      text: message,
-      createdAt: Date.now()
-    });
-
-    // ---------- SMART DEMO BOT LOGIC ----------
-    const text = message.toLowerCase();
-    let reply = "";
-
-    if (text.includes("chocolate")) {
-      reply =
-        "🍫 **Let’s compare them:**\n\n" +
-        "• **Morde Dark Chocolate** – richer cocoa taste, better for mood, but contains sugar\n" +
-        "• **Amul Sugar Free** – better if you want to avoid sugar or manage diabetes\n\n" +
-        "👉 **Health priority:** Amul Sugar Free\n" +
-        "👉 **Taste priority:** Morde Dark Chocolate";
-    }
-    else if (text.includes("help me decide") || text.includes("i'm ready")) {
-      reply =
-        "Great 👍\n\n" +
-        "👉 Please enter your options separated by commas.";
-      currentStep = "OPTIONS";
-    }
-    else {
-      reply =
-        "🤖 I’m here to help you decide.\n\n" +
-        "Tell me what you’re confused about or what options you’re choosing between.";
-    }
-
-    // ---------- BOT MESSAGE ----------
-    chatMessages.push({
-      role: "Bot",
-      text: reply,
-      createdAt: Date.now()
-    });
-
-    // ---------- SAVE CHAT ----------
-    let newChatId = chatId;
-    try {
-      newChatId = await saveChat({
-        email: req.user.email,
-        chatId,
-        messages: chatMessages,
-        step: currentStep
-      });
-    } catch (err) {
-      console.error("FIRESTORE SAVE ERROR:", err.message);
-    }
-
-    res.render("chat", {
-      messages: chatMessages,
-      step: currentStep,
-      chatId: newChatId
-    });
-
+    document.cookie = `token=${token}; path=/`;
+    location.href = "/chat";
   } catch (err) {
-    console.error("CHAT ERROR:", err);
-    res.status(500).send("Something went wrong. Please try again.");
+    showMessage(err.message);
   }
-});
+};
 
-// ---------- HISTORY ----------
-router.get("/history", requireAuth, async (req, res) => {
+/* ✨ CREATE ACCOUNT */
+window.createAccount = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!email || !password) {
+    showMessage("Please enter email and password");
+    return;
+  }
+
+  if (password.length < 6) {
+    showMessage("Password must be at least 6 characters");
+    return;
+  }
+
   try {
-    const db = admin.firestore();
-
-    const snap = await db
-      .collection("users")
-      .doc(req.user.email)
-      .collection("chats")
-      .orderBy("createdAt", "desc")
-      .get();
-
-    const decisions = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    res.render("history", { decisions });
-
+    await createUserWithEmailAndPassword(auth, email, password);
+    showMessage("✅ Account created! You can now sign in.", false);
   } catch (err) {
-    console.error("HISTORY ERROR:", err.message);
-    res.status(500).send("Failed to load history");
+    showMessage(err.message);
   }
-});
+};
 
-module.exports = router;
+/* 🚪 LOGOUT */
+window.logout = async () => {
+  await signOut(auth);
+  document.cookie = "token=; Max-Age=0; path=/";
+  location.href = "/";
+};

@@ -3,11 +3,10 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// ---------- FIREBASE CONFIG ----------
+/* ---------------- FIREBASE CONFIG ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyD4zyIOYaquJ_U9L5iWbPs-Dr-6S7Lfdxg",
   authDomain: "life-decision-helper.firebaseapp.com",
@@ -17,14 +16,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ---------- HELPERS ----------
-function showMessage(msg) {
+/* ---------------- HELPERS ---------------- */
+function showMessage(msg, isError = true) {
   const el = document.getElementById("authMessage");
-  if (el) el.innerText = msg;
+  el.style.color = isError ? "red" : "green";
+  el.innerText = msg;
 }
 
-// ---------- LOGIN ----------
-window.login = async (email, password) => {
+/* ---------------- LOGIN ---------------- */
+window.login = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
   if (!email || !password) {
     showMessage("Please enter email and password");
     return;
@@ -35,38 +38,38 @@ window.login = async (email, password) => {
     const token = await userCred.user.getIdToken();
 
     document.cookie = `token=${token}; path=/`;
-    location.href = "/chat";
+    window.location.href = "/chat";
   } catch (err) {
     showMessage(err.message);
   }
 };
 
-// ---------- REGISTER (THIS FIXES YOUR ISSUE) ----------
-window.register = async (email, password) => {
+/* ---------------- CREATE ACCOUNT (FIXED) ---------------- */
+window.createAccount = async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
   if (!email || !password) {
     showMessage("Please enter email and password");
     return;
   }
 
+  if (password.length < 6) {
+    showMessage("Password must be at least 6 characters");
+    return;
+  }
+
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-    showMessage("✅ Account created! You can now sign in.");
+    showMessage("✅ Account created! You can now sign in.", false);
   } catch (err) {
     showMessage(err.message);
   }
 };
 
-// ---------- LOGOUT ----------
+/* ---------------- LOGOUT (OPTIONAL) ---------------- */
 window.logout = async () => {
   await signOut(auth);
   document.cookie = "token=; Max-Age=0; path=/";
-  location.href = "/";
+  window.location.href = "/";
 };
-
-// ---------- AUTO LOGIN CHECK ----------
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const token = await user.getIdToken();
-    document.cookie = `token=${token}; path=/`;
-  }
-});

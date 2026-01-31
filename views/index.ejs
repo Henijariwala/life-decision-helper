@@ -10,7 +10,6 @@
   <h1>🧭 Life Decision Helper</h1>
   <p class="subtitle">Think clearly. Decide calmly.</p>
 
-  <!-- AUTH CARD -->
   <div class="auth-card">
 
     <!-- LOGGED OUT -->
@@ -19,22 +18,21 @@
         id="email"
         type="email"
         placeholder="Email address"
-        required
+        autocomplete="username"
       />
 
       <input
         id="password"
         type="password"
         placeholder="Password"
-        required
+        autocomplete="current-password"
       />
 
-      <button onclick="login(email.value, password.value)">
+      <button class="primary" onclick="login()">
         🔐 Sign In
       </button>
 
-      <button class="secondary"
-        onclick="register(email.value, password.value)">
+      <button class="secondary" onclick="createAccount()">
         ✨ Create Account
       </button>
     </div>
@@ -57,16 +55,11 @@
 
   <script type="module" src="/auth.js"></script>
 
-  <!-- SIMPLE UI TOGGLE -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const loggedIn = document.getElementById("loggedIn");
-      const loggedOut = document.getElementById("loggedOut");
-
-      // auth.js will refresh cookie if logged in
       if (document.cookie.includes("token=")) {
-        loggedOut.style.display = "none";
-        loggedIn.style.display = "block";
+        document.getElementById("loggedOut").style.display = "none";
+        document.getElementById("loggedIn").style.display = "block";
       }
     });
   </script>
