@@ -6,7 +6,7 @@ module.exports = async (req, res, next) => {
     if (!token) return res.redirect("/");
 
     const decoded = await admin.auth().verifyIdToken(token);
-    req.user = decoded; // email, uid
+    req.user = decoded;
     next();
   } catch {
     res.redirect("/");

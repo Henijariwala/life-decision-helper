@@ -6,7 +6,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* ---------------- FIREBASE CONFIG ---------------- */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyD4zyIOYaquJ_U9L5iWbPs-Dr-6S7Lfdxg",
   authDomain: "life-decision-helper.firebaseapp.com",
@@ -16,17 +16,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-/* ---------------- HELPERS ---------------- */
 function showMessage(msg, isError = true) {
   const el = document.getElementById("authMessage");
+  if (!el) return;
   el.style.color = isError ? "red" : "green";
   el.innerText = msg;
 }
 
-/* ---------------- LOGIN ---------------- */
+/* LOGIN */
 window.login = async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
 
   if (!email || !password) {
     showMessage("Please enter email and password");
@@ -34,20 +34,19 @@ window.login = async () => {
   }
 
   try {
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    const token = await userCred.user.getIdToken();
-
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const token = await cred.user.getIdToken();
     document.cookie = `token=${token}; path=/`;
-    window.location.href = "/chat";
-  } catch (err) {
-    showMessage(err.message);
+    location.href = "/chat";
+  } catch (e) {
+    showMessage(e.message);
   }
 };
 
-/* ---------------- CREATE ACCOUNT (FIXED) ---------------- */
+/* CREATE ACCOUNT */
 window.createAccount = async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
 
   if (!email || !password) {
     showMessage("Please enter email and password");
@@ -61,15 +60,18 @@ window.createAccount = async () => {
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-    showMessage("✅ Account created! You can now sign in.", false);
-  } catch (err) {
-    showMessage(err.message);
+    showMessage("✅ Account created! You can sign in now.", false);
+  } catch (e) {
+    showMessage(e.message);
   }
 };
 
-/* ---------------- LOGOUT (OPTIONAL) ---------------- */
+/* LOGOUT */
 window.logout = async () => {
   await signOut(auth);
   document.cookie = "token=; Max-Age=0; path=/";
-  window.location.href = "/";
+  location.href = "/";
 };
+
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
