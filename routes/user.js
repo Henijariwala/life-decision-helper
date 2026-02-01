@@ -1,13 +1,11 @@
 const express = require("express");
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
 const router = express.Router();
 
-const GEMINI_ENDPOINT =
+const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent";
-
-// Home
-router.get("/", (req, res) => {
-  res.render("index");
-});
 
 // Chat page
 router.get("/chat", (req, res) => {
@@ -23,7 +21,7 @@ router.post("/chat", async (req, res) => {
 
   try {
     const response = await fetch(
-      `${GEMINI_ENDPOINT}?key=${process.env.GEMINI_API_KEY}`,
+      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -33,24 +31,17 @@ router.post("/chat", async (req, res) => {
               role: "user",
               parts: [{ text: message }]
             }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 300
-          }
+          ]
         })
       }
     );
 
     const data = await response.json();
-    console.log("🟢 GEMINI RESPONSE:", JSON.stringify(data, null, 2));
+    console.log("🟢 GEMINI RAW RESPONSE:", JSON.stringify(data, null, 2));
 
-    let reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!reply) {
-      reply = "🤖 Gemini did not return a response. Please try another question.";
-    }
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "🤖 Gemini did not return a response. Please try again.";
 
     chatMessages.push({ role: "Bot", text: reply });
 
@@ -61,7 +52,7 @@ router.post("/chat", async (req, res) => {
 
     chatMessages.push({
       role: "Bot",
-      text: "⚠️ AI service error. Please try again later."
+      text: "⚠️ Gemini service error. Please try again later."
     });
 
     res.render("chat", { messages: chatMessages });
