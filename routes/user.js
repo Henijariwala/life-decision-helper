@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const OpenAI = require("openai");
 const requireAuth = require("../middleware/auth");
 const saveChat = require("../utils/saveChat");
@@ -20,29 +19,15 @@ Only start decision-making when the user is ready.
 
 // ---------- HOME ----------
 router.get("/", (req, res) => {
-  const indexPath = path.resolve(__dirname, "..", "views", "index.html");
-  console.log("Trying to serve index.html from:", indexPath);
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      console.error("Error serving index.html:", err);
-      res.status(500).send("Error loading page");
-    }
-  });
+  res.render("index");
 });
 
-// ---------- SIGNUP PAGE ----------
+// ---------- SIGNUP ----------
 router.get("/signup", (req, res) => {
-  const signupPath = path.resolve(__dirname, "..", "views", "signup.html");
-  console.log("Trying to serve signup.html from:", signupPath);
-  res.sendFile(signupPath, (err) => {
-    if (err) {
-      console.error("Error serving signup.html:", err);
-      res.status(500).send("Error loading page");
-    }
-  });
+  res.render("signup");
 });
 
-// ---------- CHAT PAGE ----------
+// ---------- CHAT ----------
 router.get("/chat", requireAuth, (req, res) => {
   res.render("chat", {
     messages: [],
@@ -51,7 +36,7 @@ router.get("/chat", requireAuth, (req, res) => {
   });
 });
 
-// ---------- CHAT MESSAGE ----------
+// ---------- CHAT POST ----------
 router.post("/chat", requireAuth, async (req, res) => {
   try {
     const {
@@ -63,16 +48,13 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     let chatMessages = JSON.parse(messages);
     let currentStep = step;
-    let reply = "";
 
-    // Add user message
     chatMessages.push({
       role: "User",
       text: message,
       createdAt: Date.now()
     });
 
-    // ---------- AI RESPONSE ----------
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -84,9 +66,8 @@ router.post("/chat", requireAuth, async (req, res) => {
       ]
     });
 
-    reply = ai.choices[0].message.content;
+    let reply = ai.choices[0].message.content;
 
-    // Step progression (simple, safe)
     if (
       currentStep === "EMOTIONAL" &&
       /help me decide|i'?m ready|start decision/i.test(message)
@@ -101,7 +82,6 @@ router.post("/chat", requireAuth, async (req, res) => {
       createdAt: Date.now()
     });
 
-    // ---------- SAVE CHAT ----------
     const newChatId = await saveChat({
       email: req.user.email,
       chatId,
@@ -117,7 +97,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 
   } catch (err) {
     console.error("CHAT ERROR:", err);
-    res.status(500).send("Chat failed. Please try again.");
+    res.status(500).send("Chat failed");
   }
 });
 
@@ -133,15 +113,10 @@ router.get("/history", requireAuth, async (req, res) => {
       .orderBy("createdAt", "desc")
       .get();
 
-    const decisions = snap.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        messages: data.messages || [],
-        step: data.step,
-        createdAt: data.createdAt
-      };
-    });
+    const decisions = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     res.render("history", { decisions });
   } catch (err) {
