@@ -20,12 +20,26 @@ Only start decision-making when the user is ready.
 
 // ---------- HOME ----------
 router.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "views", "index.html"));
+  const indexPath = path.resolve(__dirname, "..", "views", "index.html");
+  console.log("Trying to serve index.html from:", indexPath);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error("Error serving index.html:", err);
+      res.status(500).send("Error loading page");
+    }
+  });
 });
 
 // ---------- SIGNUP PAGE ----------
 router.get("/signup", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "views", "signup.html"));
+  const signupPath = path.resolve(__dirname, "..", "views", "signup.html");
+  console.log("Trying to serve signup.html from:", signupPath);
+  res.sendFile(signupPath, (err) => {
+    if (err) {
+      console.error("Error serving signup.html:", err);
+      res.status(500).send("Error loading page");
+    }
+  });
 });
 
 // ---------- CHAT PAGE ----------
