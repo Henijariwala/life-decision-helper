@@ -23,8 +23,8 @@ router.get("/", (req, res) => {
 });
 
 // ---------- SIGNUP ----------
-router.get("/signup", (req, res) => {
-  res.render("signup");
+router.get("/Signup", (req, res) => {
+  res.render("Signup");
 });
 
 // ---------- CHAT ----------
