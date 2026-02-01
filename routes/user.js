@@ -1,15 +1,10 @@
 const express = require("express");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const fetch = require("node-fetch");
 
 const router = express.Router();
 
-// Init Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// ✅ THIS MODEL WORKS
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.0-pro"
-});
+const GEMINI_URL =
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
 // Home
 router.get("/", (req, res) => {
@@ -32,8 +27,27 @@ router.post("/chat", async (req, res) => {
   });
 
   try {
-    const result = await model.generateContent(message);
-    const reply = result.response.text();
+    const response = await fetch(
+      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: message }]
+            }
+          ]
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    const reply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "⚠️ No response from AI.";
 
     chatMessages.push({
       role: "Bot",
@@ -43,7 +57,7 @@ router.post("/chat", async (req, res) => {
     res.render("chat", { messages: chatMessages });
 
   } catch (err) {
-    console.error("GEMINI ERROR:", err);
+    console.error("GEMINI REST ERROR:", err);
 
     chatMessages.push({
       role: "Bot",
