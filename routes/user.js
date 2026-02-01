@@ -1,8 +1,8 @@
 const express = require("express");
-const fetch = require("node-fetch");
 
 const router = express.Router();
 
+// Gemini REST endpoint (stable)
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
@@ -27,11 +27,14 @@ router.post("/chat", async (req, res) => {
   });
 
   try {
+    // ✅ Use GLOBAL fetch (Node 18+)
     const response = await fetch(
       `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           contents: [
             {
@@ -57,7 +60,7 @@ router.post("/chat", async (req, res) => {
     res.render("chat", { messages: chatMessages });
 
   } catch (err) {
-    console.error("GEMINI REST ERROR:", err);
+    console.error("GEMINI ERROR:", err);
 
     chatMessages.push({
       role: "Bot",
