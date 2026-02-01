@@ -1,35 +1,25 @@
-require('dotenv').config();
+const express = require("express");
+const path = require("path");
+const dotenv = require("dotenv");
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const path = require('path');
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 10000;
 
-// Import routes
-const chatRoutes = require('./routes/chat');
+// middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static('public'));
+// view engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-// View engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// ✅ FIXED ROUTE IMPORT
+const userRoutes = require("./routes/user");
+app.use("/", userRoutes);
 
-// Routes
-app.use('/', chatRoutes);
-
-// Home route
-app.get('/', (req, res) => {
-  res.redirect('/chat');
-});
-
-// Start server
+// port
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🔑 Gemini API Key: ${process.env.GEMINI_API_KEY ? 'Loaded ✓' : 'Missing ✗'}`);
-  console.log(`🌐 Visit: http://localhost:${PORT}/chat`);
 });
