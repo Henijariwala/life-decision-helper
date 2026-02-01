@@ -14,10 +14,8 @@
 </div>
 
 <form method="POST" action="/chat">
-  <input type="hidden" name="step" value="<%= step %>">
   <input type="hidden" name="messages" value='<%= JSON.stringify(messages) %>'>
-
-  <input type="text" name="message" placeholder="Type your message..." required />
+  <input type="text" name="message" placeholder="Ask anything..." required />
   <button type="submit">Send</button>
 </form>
 
