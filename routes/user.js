@@ -3,9 +3,12 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const router = express.Router();
 
+// Init Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// ✅ THIS MODEL WORKS
 const model = genAI.getGenerativeModel({
-  model: "gemini-pro" // ✅ WORKING MODEL
+  model: "gemini-1.0-pro"
 });
 
 // Home
@@ -21,7 +24,7 @@ router.get("/chat", (req, res) => {
 // Chat submit
 router.post("/chat", async (req, res) => {
   const { message, messages = "[]" } = req.body;
-  let chatMessages = JSON.parse(messages);
+  const chatMessages = JSON.parse(messages);
 
   chatMessages.push({
     role: "User",
