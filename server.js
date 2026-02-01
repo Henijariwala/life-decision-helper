@@ -1,24 +1,35 @@
-require("dotenv").config();
-const express = require("express");
-const path = require("path");
+require('dotenv').config();
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
+const PORT = process.env.PORT || 10000;
 
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+// Import routes
+const chatRoutes = require('./routes/chat');
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(express.static("public"));
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static('public'));
 
-app.use("/", require("./routes/user"));
+// View engine setup
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-app.use((err, req, res, next) => {
-  console.error("SERVER ERROR:", err);
-  res.status(500).send("Something went wrong");
+// Routes
+app.use('/', chatRoutes);
+
+// Home route
+app.get('/', (req, res) => {
+  res.redirect('/chat');
 });
 
-const PORT = process.env.PORT || 3000;
+// Start server
 app.listen(PORT, () => {
-  console.log("✅ Server running on port", PORT);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔑 Gemini API Key: ${process.env.GEMINI_API_KEY ? 'Loaded ✓' : 'Missing ✗'}`);
+  console.log(`🌐 Visit: http://localhost:${PORT}/chat`);
 });
