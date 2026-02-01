@@ -3,7 +3,7 @@ const router = express.Router();
 
 // HOME PAGE
 router.get("/", (req, res) => {
-  res.render("home");
+  res.render("index");
 });
 
 // CHAT PAGE (THIS FIXES Cannot GET /chat)
