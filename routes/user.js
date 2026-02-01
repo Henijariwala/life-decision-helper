@@ -61,7 +61,7 @@ router.post('/chat', async (req, res) => {
     chatMessages.push({ role: 'Bot', text: reply });
 
     // Render chat page with updated messages
-    res.render('chat', { messages: chatMessages });
+    res.render('/chat', { messages: chatMessages });
 
   } catch (error) {
     console.error('🔴 GEMINI ERROR:', error.message);
@@ -72,7 +72,7 @@ router.post('/chat', async (req, res) => {
       text: `⚠️ Error: ${error.message}. Please check your API key and try again.`
     });
 
-    res.render('chat', { messages: chatMessages });
+    res.render('/chat', { messages: chatMessages });
   }
 });
 
