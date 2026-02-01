@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", require("./routes/user"));
 app.use("/admin", require("./routes/admin"));
 
-// ---------- ERROR HANDLER ----------
+// ---------- GLOBAL ERROR ----------
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err);
   res.status(500).send("Something went wrong");

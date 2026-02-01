@@ -7,7 +7,7 @@ const admin = require("../firebaseAdmin");
 const router = express.Router();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // ---------- SYSTEM PROMPT ----------
@@ -23,8 +23,8 @@ router.get("/", (req, res) => {
 });
 
 // ---------- SIGNUP ----------
-router.get("/Signup", (req, res) => {
-  res.render("Signup");
+router.get("/signup", (req, res) => {
+  res.render("signup");
 });
 
 // ---------- CHAT ----------
@@ -38,16 +38,12 @@ router.get("/chat", requireAuth, (req, res) => {
 
 // ---------- CHAT POST ----------
 router.post("/chat", requireAuth, async (req, res) => {
-  try {
-    const {
-      message,
-      messages = "[]",
-      step = "EMOTIONAL",
-      chatId = ""
-    } = req.body;
+  let chatMessages = [];
+  let currentStep = req.body.step || "EMOTIONAL";
 
-    let chatMessages = JSON.parse(messages);
-    let currentStep = step;
+  try {
+    const { message, messages = "[]", chatId = "" } = req.body;
+    chatMessages = JSON.parse(messages);
 
     chatMessages.push({
       role: "User",
@@ -89,7 +85,7 @@ router.post("/chat", requireAuth, async (req, res) => {
       step: currentStep
     });
 
-    res.render("chat", {
+    return res.render("chat", {
       messages: chatMessages,
       step: currentStep,
       chatId: newChatId
@@ -97,6 +93,22 @@ router.post("/chat", requireAuth, async (req, res) => {
 
   } catch (err) {
     console.error("CHAT ERROR:", err);
+
+    // ✅ HANDLE OPENAI QUOTA ERROR
+    if (err.status === 429) {
+      chatMessages.push({
+        role: "Bot",
+        text: "⚠️ AI service is temporarily unavailable (quota exceeded). Please try again later.",
+        createdAt: Date.now()
+      });
+
+      return res.render("chat", {
+        messages: chatMessages,
+        step: currentStep,
+        chatId: req.body.chatId || ""
+      });
+    }
+
     res.status(500).send("Chat failed");
   }
 });
@@ -105,7 +117,6 @@ router.post("/chat", requireAuth, async (req, res) => {
 router.get("/history", requireAuth, async (req, res) => {
   try {
     const db = admin.firestore();
-
     const snap = await db
       .collection("users")
       .doc(req.user.email)
@@ -113,9 +124,9 @@ router.get("/history", requireAuth, async (req, res) => {
       .orderBy("createdAt", "desc")
       .get();
 
-    const decisions = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+    const decisions = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
     }));
 
     res.render("history", { decisions });
