@@ -9,6 +9,6 @@ module.exports = async (req, res, next) => {
     req.user = decoded;
     next();
   } catch {
-    return res.redirect("/");
+    res.redirect("/");
   }
 };
