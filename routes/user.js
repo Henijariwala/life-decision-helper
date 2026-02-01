@@ -45,12 +45,14 @@ router.post("/chat", requireAuth, async (req, res) => {
     const { message, messages = "[]", chatId = "" } = req.body;
     chatMessages = JSON.parse(messages);
 
+    // User message
     chatMessages.push({
       role: "User",
       text: message,
       createdAt: Date.now()
     });
 
+    // -------- TRY REAL OPENAI ----------
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -94,22 +96,31 @@ router.post("/chat", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("CHAT ERROR:", err);
 
-    // ✅ HANDLE OPENAI QUOTA ERROR
-    if (err.status === 429) {
-      chatMessages.push({
-        role: "Bot",
-        text: "⚠️ AI service is temporarily unavailable (quota exceeded). Please try again later.",
-        createdAt: Date.now()
-      });
+    // ---------- MOCK AI FALLBACK ----------
+    let mockReply;
 
-      return res.render("chat", {
-        messages: chatMessages,
-        step: currentStep,
-        chatId: req.body.chatId || ""
-      });
+    if (currentStep === "EMOTIONAL") {
+      mockReply =
+        "Hey 🙂 I’m here with you. Want to talk about what’s been on your mind lately?";
+    } else if (currentStep === "OPTIONS") {
+      mockReply =
+        "Got it. Please list your options separated by commas, and we’ll go through them together.";
+    } else {
+      mockReply =
+        "I’m still here. Let’s take this one step at a time.";
     }
 
-    res.status(500).send("Chat failed");
+    chatMessages.push({
+      role: "Bot",
+      text: mockReply,
+      createdAt: Date.now()
+    });
+
+    return res.render("chat", {
+      messages: chatMessages,
+      step: currentStep,
+      chatId: req.body.chatId || ""
+    });
   }
 });
 
@@ -117,6 +128,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 router.get("/history", requireAuth, async (req, res) => {
   try {
     const db = admin.firestore();
+
     const snap = await db
       .collection("users")
       .doc(req.user.email)
@@ -124,9 +136,9 @@ router.get("/history", requireAuth, async (req, res) => {
       .orderBy("createdAt", "desc")
       .get();
 
-    const decisions = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
+    const decisions = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
     }));
 
     res.render("history", { decisions });
