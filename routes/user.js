@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 // HOME PAGE
 router.get("/", (req, res) => {
@@ -37,56 +36,59 @@ router.post("/chat", async (req, res) => {
 
   try {
     // Check if API key exists
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not set in environment variables");
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not set in environment variables");
     }
 
-    console.log("🔄 Sending request to Gemini API...");
+    console.log("🔄 Sending request to OpenAI API...");
 
-    // Call Gemini API
-    const response = await fetch(
-      `${GEMINI_URL}?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `You are a wise and helpful decision-making assistant. 
-Provide practical, thoughtful, and friendly advice to help users make better decisions.
+    // Build conversation history for OpenAI
+    const conversationHistory = chatMessages.map(msg => ({
+      role: msg.role === "assistant" ? "assistant" : "user",
+      content: msg.text
+    }));
 
-User question:
-${message}`
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        })
-      }
-    );
+    // Call OpenAI API
+    const response = await fetch(OPENAI_URL, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // or "gpt-4o" for GPT-4, or "gpt-3.5-turbo" for cheaper option
+        messages: [
+          {
+            role: "system",
+            content: "You are a wise and helpful decision-making assistant. Provide practical, thoughtful, and friendly advice to help users make better decisions."
+          },
+          ...conversationHistory
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+        top_p: 0.95
+      })
+    });
 
     // Check response status
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Gemini API Error:", JSON.stringify(errorData, null, 2));
-      throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      console.error("❌ OpenAI API Error:", JSON.stringify(errorData, null, 2));
+      
+      let errorMessage = "Unknown error";
+      if (errorData.error?.message) {
+        errorMessage = errorData.error.message;
+      }
+      
+      throw new Error(`API Error: ${response.status} - ${errorMessage}`);
     }
 
     const data = await response.json();
-    console.log("✅ Gemini Response Received");
+    console.log("✅ OpenAI Response Received");
 
     // Extract AI response
     const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      data?.choices?.[0]?.message?.content ||
       "🤖 I couldn't generate a response. Please try again.";
 
     // Add bot message
