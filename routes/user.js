@@ -1,17 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-// HOME PAGE
+// HOME
 router.get("/", (req, res) => {
   res.render("index");
 });
 
-// CHAT PAGE (THIS FIXES Cannot GET /chat)
+// CHAT PAGE
 router.get("/chat", (req, res) => {
   res.render("chat", { messages: [] });
 });
 
-// CHAT FORM SUBMIT (for now just echo)
+// CHAT POST
 router.post("/chat", (req, res) => {
   const { message } = req.body;
 
