@@ -1,4 +1,5 @@
 const express = require("express");
+const fetch = require("node-fetch"); // ✅ REQUIRED
 const router = express.Router();
 
 const GEMINI_URL =
@@ -14,7 +15,7 @@ router.get("/chat", (req, res) => {
   res.render("chat", { messages: [] });
 });
 
-// CHAT WITH AI (Decision Maker Mode) ✅
+// CHAT WITH AI ✅
 router.post("/chat", async (req, res) => {
   const { message } = req.body;
 
@@ -34,20 +35,11 @@ router.post("/chat", async (req, res) => {
               role: "user",
               parts: [
                 {
-                  text: `
-You are a wise and friendly decision-making assistant.
-Your job is to help users make better decisions in life, career, health, relationships,
-and daily choices.
-
-Always:
-- Give clear, practical, and thoughtful advice
-- Explain pros and cons when needed
-- Be supportive and respectful
-- Help the user think, not judge them
+                  text: `You are a wise decision-making assistant.
+Give helpful, practical, and friendly advice.
 
 User question:
-${message}
-`
+${message}`
                 }
               ]
             }
@@ -58,17 +50,19 @@ ${message}
 
     const data = await response.json();
 
+    console.log("GEMINI RESPONSE:", JSON.stringify(data, null, 2));
+
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "🤖 I couldn’t generate a response right now. Please try again.";
+      "🤖 I couldn’t generate a response.";
 
     messages.push({ role: "Bot", text: reply });
 
   } catch (err) {
-    console.error(err);
+    console.error("GEMINI ERROR:", err);
     messages.push({
       role: "Bot",
-      text: "⚠️ I had trouble responding. Please try again later."
+      text: "⚠️ AI error. Check API key or server configuration."
     });
   }
 
