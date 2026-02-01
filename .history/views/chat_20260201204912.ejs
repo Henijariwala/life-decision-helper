@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat</title>
+</head>
+<body>
+  <h2>Decision Chat</h2>
+
+  <% messages.forEach(m => { %>
+    <p><b><%= m.role %>:</b> <%= m.text %></p>
+  <% }) %>
+
+  <form method="POST" action="/chat">
+    <input type="text" name="message" placeholder="Ask something" required />
+    <button type="submit">Send</button>
+  </form>
+</body>
+</html>
