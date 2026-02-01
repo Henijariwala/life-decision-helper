@@ -10,7 +10,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// System prompt
+// ---------- SYSTEM PROMPT ----------
 const SYSTEM_PROMPT = `
 You are a calm, empathetic assistant.
 You talk naturally and support emotions.
@@ -41,20 +41,18 @@ router.post("/chat", requireAuth, async (req, res) => {
   let chatMessages = [];
   let currentStep = req.body.step || "EMOTIONAL";
 
-  const { message, messages = "[]", chatId = "" } = req.body;
-  const userText = message.toLowerCase();
-
-  chatMessages = JSON.parse(messages);
-
-  // Save user message
-  chatMessages.push({
-    role: "User",
-    text: message,
-    createdAt: Date.now()
-  });
-
   try {
-    // 🔵 REAL OPENAI (if available)
+    const { message, messages = "[]", chatId = "" } = req.body;
+    chatMessages = JSON.parse(messages);
+
+    // User message
+    chatMessages.push({
+      role: "User",
+      text: message,
+      createdAt: Date.now()
+    });
+
+    // -------- TRY REAL OPENAI ----------
     const ai = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -70,7 +68,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     if (
       currentStep === "EMOTIONAL" &&
-      /help me decide|i'?m ready|start decision/i.test(userText)
+      /help me decide|i'?m ready|start decision/i.test(message)
     ) {
       reply += "\n\n👉 Enter your options separated by commas.";
       currentStep = "OPTIONS";
@@ -82,43 +80,34 @@ router.post("/chat", requireAuth, async (req, res) => {
       createdAt: Date.now()
     });
 
-  } catch (err) {
-    console.error("OPENAI ERROR — USING MOCK AI");
+    const newChatId = await saveChat({
+      email: req.user.email,
+      chatId,
+      messages: chatMessages,
+      step: currentStep
+    });
 
-    // 🟡 SMART MOCK AI
+    return res.render("chat", {
+      messages: chatMessages,
+      step: currentStep,
+      chatId: newChatId
+    });
+
+  } catch (err) {
+    console.error("CHAT ERROR:", err);
+
+    // ---------- MOCK AI FALLBACK ----------
     let mockReply;
 
-    // Comparison / decision questions
-    if (
-      userText.includes("which") ||
-      userText.includes("better") ||
-      userText.includes("best") ||
-      userText.includes(" or ")
-    ) {
-      mockReply =
-        "Good question 🙂 Let’s compare:\n\n" +
-        "🍫 **Morde Dark Chocolate**\n" +
-        "• Rich cocoa taste\n" +
-        "• Higher cocoa percentage\n\n" +
-        "🍫 **Amul Sugar Free Chocolate**\n" +
-        "• Lower sugar\n" +
-        "• Milder taste\n\n" +
-        "👉 Choose **Morde Dark** for taste.\n" +
-        "👉 Choose **Amul Sugar Free** for sugar control.\n\n" +
-        "Want help deciding based on your priority?";
-      currentStep = "DECISION";
-    }
-
-    // User ready to decide
-    else if (/help me decide|i'?m ready|start decision/i.test(userText)) {
-      mockReply = "Great 👍 Please enter your options separated by commas.";
-      currentStep = "OPTIONS";
-    }
-
-    // Default emotional response
-    else {
+    if (currentStep === "EMOTIONAL") {
       mockReply =
         "Hey 🙂 I’m here with you. Want to talk about what’s been on your mind lately?";
+    } else if (currentStep === "OPTIONS") {
+      mockReply =
+        "Got it. Please list your options separated by commas, and we’ll go through them together.";
+    } else {
+      mockReply =
+        "I’m still here. Let’s take this one step at a time.";
     }
 
     chatMessages.push({
@@ -126,39 +115,37 @@ router.post("/chat", requireAuth, async (req, res) => {
       text: mockReply,
       createdAt: Date.now()
     });
+
+    return res.render("chat", {
+      messages: chatMessages,
+      step: currentStep,
+      chatId: req.body.chatId || ""
+    });
   }
-
-  // Save chat
-  const newChatId = await saveChat({
-    email: req.user.email,
-    chatId,
-    messages: chatMessages,
-    step: currentStep
-  });
-
-  return res.render("chat", {
-    messages: chatMessages,
-    step: currentStep,
-    chatId: newChatId
-  });
 });
 
 // ---------- HISTORY ----------
 router.get("/history", requireAuth, async (req, res) => {
-  const db = admin.firestore();
-  const snap = await db
-    .collection("users")
-    .doc(req.user.email)
-    .collection("chats")
-    .orderBy("createdAt", "desc")
-    .get();
+  try {
+    const db = admin.firestore();
 
-  const decisions = snap.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+    const snap = await db
+      .collection("users")
+      .doc(req.user.email)
+      .collection("chats")
+      .orderBy("createdAt", "desc")
+      .get();
 
-  res.render("history", { decisions });
+    const decisions = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.render("history", { decisions });
+  } catch (err) {
+    console.error("HISTORY ERROR:", err);
+    res.status(500).send("Failed to load history");
+  }
 });
 
 module.exports = router;
