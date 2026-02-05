@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h1>🛠 Admin Dashboard</h1>
+
+<div class="grid">
+  <div class="stat">👤 Users<br><strong><%= totalUsers %></strong></div>
+  <div class="stat">📊 Decisions<br><strong><%= totalDecisions %></strong></div>
+</div>
+
+<h3>Decision Categories</h3>
+<ul>
+  <% Object.keys(categories).forEach(c => { %>
+    <li><%= c %>: <%= categories[c] %></li>
+  <% }) %>
+</ul>
+
+<a href="/" class="link">← Home</a>
+
+</body>
+</html>

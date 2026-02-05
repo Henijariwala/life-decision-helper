@@ -1,3 +1,4 @@
+//utiles/decisionLogic.js
 module.exports = (options, criteria, weights, ratings) => {
   const scores = {};
 
