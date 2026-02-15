@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Decision Chat</title>
+  <title>Decision Helper - Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -12,7 +13,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;
@@ -21,77 +22,126 @@
 
     .header {
       background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 1rem 2rem;
+      backdrop-filter: blur(20px);
+      padding: 1.2rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-size: 2rem;
     }
 
     .header h1 {
       color: white;
       font-size: 1.5rem;
+      font-weight: 600;
     }
 
     .header-actions {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .btn {
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 0.9rem;
+      font-weight: 500;
       transition: all 0.3s;
       text-decoration: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
       color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .btn-new-chat {
+      background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+      color: white;
+      font-weight: 600;
+    }
+
+    .btn-new-chat:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 153, 255, 0.4);
     }
 
     .chat-container {
       flex: 1;
-      max-width: 900px;
+      max-width: 1000px;
       width: 100%;
       margin: 2rem auto;
-      padding: 0 1rem;
+      padding: 0 1.5rem;
       display: flex;
       flex-direction: column;
+    }
+
+    .messages-wrapper {
+      flex: 1;
+      background: white;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      min-height: 400px;
+      padding: 2rem;
+      min-height: 450px;
       max-height: 600px;
     }
 
+    .messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+
     .message {
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: 12px;
-      max-width: 80%;
-      animation: slideIn 0.3s ease;
+      margin-bottom: 1.5rem;
+      animation: slideIn 0.4s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     @keyframes slideIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(15px);
       }
       to {
         opacity: 1;
@@ -99,40 +149,119 @@
       }
     }
 
+    .message-content {
+      padding: 1.2rem 1.5rem;
+      border-radius: 16px;
+      max-width: 75%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
     .message.user {
+      align-items: flex-end;
+    }
+
+    .message.user .message-content {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      margin-left: auto;
-      text-align: right;
+      border-bottom-right-radius: 4px;
     }
 
     .message.assistant {
-      background: #f0f0f0;
-      color: #333;
-      margin-right: auto;
+      align-items: flex-start;
     }
 
-    .message.error {
-      background: #fee;
-      color: #c33;
-      border-left: 4px solid #c33;
+    .message.assistant .message-content {
+      background: #f7f7f8;
+      color: #2d3748;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.error .message-content {
+      background: #fff5f5;
+      color: #c53030;
+      border-left: 4px solid #fc8181;
     }
 
     .message-text {
       margin-bottom: 0.5rem;
-      line-height: 1.5;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
-    .message-time {
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
       font-size: 0.75rem;
       opacity: 0.7;
     }
 
+    .message-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.75rem;
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+      color: #718096;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .suggestion-chip {
+      background: #edf2f7;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid #e2e8f0;
+    }
+
+    .suggestion-chip:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transform: translateY(-2px);
+    }
+
     .input-container {
-      background: rgba(255, 255, 255, 0.95);
+      background: white;
       padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
 
     .input-form {
@@ -142,17 +271,20 @@
 
     .message-input {
       flex: 1;
-      padding: 1rem;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
+      padding: 1rem 1.5rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 0.95rem;
       font-family: inherit;
-      transition: border-color 0.3s;
+      transition: all 0.3s;
+      background: #f7fafc;
     }
 
     .message-input:focus {
       outline: none;
       border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
 
     .btn-primary {
@@ -162,77 +294,97 @@
       font-weight: 600;
       border: none;
       cursor: pointer;
-      border-radius: 8px;
-      transition: transform 0.2s;
+      border-radius: 14px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
     }
 
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
     .btn-primary:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-      transform: none;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: #999;
-    }
-
-    .empty-state h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-state p {
-      font-size: 1rem;
+    @media (max-width: 768px) {
+      .message-content {
+        max-width: 85%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>💬 Decision Helper Chat</h1>
+    <div class="header-left">
+      <span class="logo">💬</span>
+      <h1>Decision Helper</h1>
+    </div>
     <div class="header-actions">
-      <a href="/history" class="btn btn-secondary">History</a>
+      <a href="/chat" class="btn btn-new-chat">
+        <span>✨</span> New Chat
+      </a>
+      <a href="/history" class="btn btn-secondary">
+        <span>📚</span> History
+      </a>
       <form action="/logout" method="POST" style="display: inline;">
-        <button type="submit" class="btn btn-secondary">Logout</button>
+        <button type="submit" class="btn btn-secondary">
+          <span>🚪</span> Logout
+        </button>
       </form>
     </div>
   </div>
 
   <div class="chat-container">
-    <div class="messages" id="messagesContainer">
-      <% if (messages && messages.length > 0) { %>
-        <% messages.forEach(function(msg) { %>
-          <div class="message <%= msg.role %> <%= msg.isError ? 'error' : '' %>">
-            <div class="message-text"><%= msg.text %></div>
-            <div class="message-time"><%= msg.timestamp || '' %></div>
+    <div class="messages-wrapper">
+      <div class="messages" id="messagesContainer">
+        <% if (messages && messages.length > 0) { %>
+          <% messages.forEach(function(msg) { %>
+            <div class="message <%= msg.role %> <%= msg.isError ? 'error' : '' %>">
+              <div class="message-content">
+                <div class="message-text"><%= msg.text %></div>
+                <div class="message-meta">
+                  <div class="message-avatar">
+                    <%= msg.role === 'user' ? '👤' : '🤖' %>
+                  </div>
+                  <span class="message-time"><%= msg.timestamp || '' %></span>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">💭</div>
+            <h2>Start a New Conversation</h2>
+            <p>I'm here to help you make better decisions!</p>
+            <div class="empty-state-suggestions">
+              <div class="suggestion-chip" onclick="fillMessage('I need help deciding on a career change')">
+                💼 Career Decision
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('Should I buy or rent a house?')">
+                🏠 Housing Choice
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('Help me choose the right college major')">
+                🎓 Education Path
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('I am thinking about starting a business')">
+                🚀 Business Ideas
+              </div>
+            </div>
           </div>
-        <% }); %>
-      <% } else { %>
-        <div class="empty-state">
-          <h2>👋 Welcome!</h2>
-          <p>Start a conversation by typing a message below.</p>
-        </div>
-      <% } %>
+        <% } %>
+      </div>
     </div>
 
     <div class="input-container">
       <form class="input-form" method="POST" action="/chat" id="chatForm">
-        <!-- Hidden field for chat ID -->
         <input type="hidden" name="chatId" value="<%= chatId || '' %>">
+        <input type="hidden" name="messages" value='<%- JSON.stringify(messages || []) %>'>
         
-        <!-- Hidden field for messages history -->
-        <input type="hidden" name="messages" id="messagesField" value='<%- JSON.stringify(messages || []) %>'>
-        
-        <!-- Message input -->
         <input 
           type="text" 
           name="message" 
@@ -243,47 +395,37 @@
           autocomplete="off"
         >
         
-        <!-- Submit button -->
-        <button type="submit" class="btn btn-primary" id="sendButton">Send</button>
+        <button type="submit" class="btn btn-primary" id="sendButton">
+          <span>📤</span> Send
+        </button>
       </form>
     </div>
   </div>
 
   <script>
-    // Auto-scroll to bottom of messages
     const messagesContainer = document.getElementById('messagesContainer');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    // Form handling
     const form = document.getElementById('chatForm');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
 
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    function fillMessage(text) {
+      messageInput.value = text;
+      messageInput.focus();
+    }
+
     form.addEventListener('submit', function(e) {
-      // Validate message is not empty
       const message = messageInput.value.trim();
-      
       if (!message) {
         e.preventDefault();
-        alert('Please enter a message');
         return false;
       }
-
-      // Disable button to prevent double submission
       sendButton.disabled = true;
-      sendButton.textContent = 'Sending...';
+      sendButton.innerHTML = '<span>⏳</span> Sending...';
     });
 
-    // Focus on input when page loads
     messageInput.focus();
-
-    // Allow Enter to submit (without Shift)
-    messageInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        form.submit();
-      }
-    });
   </script>
 </body>
 </html>
