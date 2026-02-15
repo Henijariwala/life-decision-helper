@@ -66,8 +66,8 @@ app.get('/ping', (req, res) => {
 // ==================== ROUTES ====================
 const authRoutes = require("./routes/auth");
 const chatRoutes = require("./routes/chat");
-const decisionRoutes = require("./routes/decision");
-const historyRoutes = require("./routes/history");
+// const decisionRoutes = require("./routes/decision");
+// const historyRoutes = require("./routes/history");
 const adminRoutes = require("./routes/admin");
 
 // Public routes (no auth required)
@@ -75,8 +75,8 @@ app.use("/", authRoutes);
 
 // Protected routes (auth required)
 app.use("/chat", chatRoutes);
-app.use("/decision", decisionRoutes);
-app.use("/history", historyRoutes);
+// app.use("/decision", decisionRoutes);
+// app.use("/history", historyRoutes);
 app.use("/admin", adminRoutes);
 
 // ==================== ERROR HANDLING ====================
