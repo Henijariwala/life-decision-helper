@@ -1,83 +1,227 @@
-// routes/chat.js - Chat Routes (Emotional Support → Decision Making)
+// routes/chat.js - Chat Routes (Refactored)
 const express = require("express");
 const router = express.Router();
-const { requireAuth } = require("../middleware/auth");
-const { asyncHandler } = require("../middleware/errorHandler");
+const requireAuth = require("../middleware/auth");
+const admin = require("../firebaseAdmin");
 const AIService = require("../services/aiService");
-const FirebaseService = require("../services/firebaseService");
 
-// GET /chat - Load chat interface
-router.get("/", requireAuth, asyncHandler(async (req, res) => {
-  const chatId = req.query.chatId || "";
-  let messages = [];
-  let step = "EMOTIONAL";
+/**
+ * GET /chat - Load chat interface
+ * Supports loading existing chats via chatId query parameter
+ */
+router.get("/", requireAuth, async (req, res) => {
+  try {
+    const db = admin.firestore();
+    const chatId = req.query.chatId || "";
+    
+    let messages = [];
+    let currentChatId = chatId;
+    let step = "EMOTIONAL";
 
-  // Load existing chat if chatId provided
-  if (chatId) {
-    const chat = await FirebaseService.getChat(req.user.email, chatId);
-    if (chat) {
-      messages = chat.messages || [];
-      step = chat.step || "EMOTIONAL";
+    // Load existing chat if chatId provided
+    if (chatId) {
+      try {
+        const chatDoc = await db
+          .collection("users")
+          .doc(req.user.email)
+          .collection("chats")
+          .doc(chatId)
+          .get();
+
+        if (chatDoc.exists) {
+          const data = chatDoc.data();
+          messages = data.messages || [];
+          step = data.step || "EMOTIONAL";
+        } else {
+          console.log("Chat not found, starting new chat");
+          currentChatId = "";
+        }
+      } catch (err) {
+        console.error("Error loading chat:", err);
+        currentChatId = "";
+      }
     }
+
+    res.render("chat", { 
+      messages, 
+      chatId: currentChatId,
+      step 
+    });
+  } catch (error) {
+    console.error("Error loading chat page:", error);
+    res.render("chat", { 
+      messages: [], 
+      chatId: "",
+      step: "EMOTIONAL"
+    });
   }
+});
 
-  res.render("user/chat", {
-    title: "Decision Chat",
-    messages,
-    chatId,
-    step
-  });
-}));
-
-// POST /chat - Send message
-router.post("/", requireAuth, asyncHandler(async (req, res) => {
+/**
+ * POST /chat - Handle message submission
+ * Processes user messages and gets AI responses
+ */
+router.post("/", requireAuth, async (req, res) => {
+  const db = admin.firestore();
   const { message, messages = "[]", chatId = "", step = "EMOTIONAL" } = req.body;
   
-  let chatMessages = JSON.parse(messages);
-  let currentStep = step;
-
-  // Add user message
-  chatMessages.push({
-    role: "user",
-    text: message,
-    timestamp: new Date().toLocaleTimeString()
-  });
-
-  // Get AI response based on step
-  let aiResponse;
-  if (currentStep === "EMOTIONAL") {
-    aiResponse = await AIService.getEmotionalSupport(chatMessages);
-    
-    // Check if user is ready for decision-making
-    if (AIService.isReadyForDecision(message)) {
-      currentStep = "DECISION_INPUT";
-      aiResponse += " What decision would you like help with? Please describe your situation.";
-    }
-  } else {
-    aiResponse = await AIService.getDecisionGuidance(chatMessages);
+  // Parse previous messages
+  let chatMessages = [];
+  try {
+    chatMessages = JSON.parse(messages);
+  } catch (error) {
+    console.error("Error parsing messages:", error);
+    chatMessages = [];
   }
 
-  // Add AI response
-  chatMessages.push({
-    role: "assistant",
-    text: aiResponse,
+  // Add user message
+  const userMessage = { 
+    role: "user", 
+    text: message,
     timestamp: new Date().toLocaleTimeString()
-  });
+  };
+  
+  chatMessages.push(userMessage);
 
-  // Save to Firebase
-  const newChatId = await FirebaseService.saveChat(
-    req.user.email,
-    chatId,
-    chatMessages,
-    currentStep
-  );
+  // Track current step
+  let currentStep = step;
+  let currentChatId = chatId;
 
-  res.render("user/chat", {
-    title: "Decision Chat",
-    messages: chatMessages,
-    chatId: newChatId,
+  // Save user message to Firebase immediately
+  try {
+    if (currentChatId) {
+      // Update existing chat
+      await db
+        .collection("users")
+        .doc(req.user.email)
+        .collection("chats")
+        .doc(currentChatId)
+        .update({
+          messages: chatMessages,
+          step: currentStep,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      console.log("✅ Updated existing chat:", currentChatId);
+    } else {
+      // Create new chat
+      const newChatRef = await db
+        .collection("users")
+        .doc(req.user.email)
+        .collection("chats")
+        .add({
+          messages: chatMessages,
+          step: currentStep,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      currentChatId = newChatRef.id;
+      console.log("✅ Created new chat:", currentChatId);
+    }
+  } catch (error) {
+    console.error("❌ Error saving user message to Firebase:", error);
+  }
+
+  // Get AI Response based on current step
+  try {
+    let aiResponse;
+
+    if (currentStep === "EMOTIONAL") {
+      // Get emotional support response
+      aiResponse = await AIService.getEmotionalSupport(chatMessages);
+      
+      // Check if user is ready to transition to decision-making
+      if (AIService.isReadyForDecision(message)) {
+        currentStep = "DECISION_INPUT";
+        aiResponse += " What decision would you like help with? Please describe your situation.";
+      }
+    } else {
+      // Get decision-making guidance
+      aiResponse = await AIService.getDecisionGuidance(chatMessages);
+    }
+
+    // Add bot message
+    const botMessage = { 
+      role: "assistant", 
+      text: aiResponse,
+      timestamp: new Date().toLocaleTimeString()
+    };
+    
+    chatMessages.push(botMessage);
+
+    // Save bot message to Firebase
+    await db
+      .collection("users")
+      .doc(req.user.email)
+      .collection("chats")
+      .doc(currentChatId)
+      .update({
+        messages: chatMessages,
+        step: currentStep,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    
+    console.log("✅ Bot message saved to Firebase");
+
+  } catch (error) {
+    console.error("❌ AI ERROR:", error.message);
+
+    // Add error message
+    const errorMessage = {
+      role: "assistant",
+      text: `⚠️ ${error.message}`,
+      timestamp: new Date().toLocaleTimeString(),
+      isError: true
+    };
+    
+    chatMessages.push(errorMessage);
+
+    // Save error message to Firebase
+    if (currentChatId) {
+      try {
+        await db
+          .collection("users")
+          .doc(req.user.email)
+          .collection("chats")
+          .doc(currentChatId)
+          .update({
+            messages: chatMessages,
+            step: currentStep,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+      } catch (fbError) {
+        console.error("❌ Error saving error message to Firebase:", fbError);
+      }
+    }
+  }
+
+  // Render chat page with updated messages
+  res.render("chat", { 
+    messages: chatMessages, 
+    chatId: currentChatId,
     step: currentStep
   });
-}));
+});
+
+/**
+ * DELETE /chat/:chatId - Delete a chat
+ */
+router.delete("/:chatId", requireAuth, async (req, res) => {
+  try {
+    const db = admin.firestore();
+    const chatId = req.params.chatId;
+
+    await db
+      .collection("users")
+      .doc(req.user.email)
+      .collection("chats")
+      .doc(chatId)
+      .delete();
+
+    res.json({ success: true, message: "Chat deleted successfully" });
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 module.exports = router;

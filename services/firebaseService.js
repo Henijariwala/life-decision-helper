@@ -1,5 +1,5 @@
-// services/firebaseService.js - Firebase Database Operations
-const { db, serverTimestamp } = require("../config/firebase");
+// services/firebaseService.js - Firebase Database Operations (Enhanced)
+const admin = require("../firebaseAdmin");
 
 class FirebaseService {
   /**
@@ -12,10 +12,11 @@ class FirebaseService {
    */
   static async saveChat(email, chatId, messages, step = "EMOTIONAL") {
     try {
+      const db = admin.firestore();
       const chatData = {
         messages,
         step,
-        updatedAt: serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
       if (chatId) {
@@ -27,10 +28,11 @@ class FirebaseService {
           .doc(chatId)
           .update(chatData);
         
+        console.log("✅ Updated chat:", chatId);
         return chatId;
       } else {
         // Create new chat
-        chatData.createdAt = serverTimestamp();
+        chatData.createdAt = admin.firestore.FieldValue.serverTimestamp();
         
         const chatRef = await db
           .collection("users")
@@ -38,6 +40,7 @@ class FirebaseService {
           .collection("chats")
           .add(chatData);
         
+        console.log("✅ Created new chat:", chatRef.id);
         return chatRef.id;
       }
     } catch (error) {
@@ -54,6 +57,7 @@ class FirebaseService {
    */
   static async getChat(email, chatId) {
     try {
+      const db = admin.firestore();
       const chatDoc = await db
         .collection("users")
         .doc(email)
@@ -83,6 +87,7 @@ class FirebaseService {
    */
   static async getUserChats(email, limit = 50) {
     try {
+      const db = admin.firestore();
       const chatsSnapshot = await db
         .collection("users")
         .doc(email)
@@ -91,10 +96,25 @@ class FirebaseService {
         .limit(limit)
         .get();
 
-      return chatsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      return chatsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Convert Firestore timestamp to JavaScript date
+        let createdAtDate = null;
+        if (data.createdAt) {
+          createdAtDate = data.createdAt.toDate();
+        }
+        
+        return {
+          id: doc.id,
+          messages: data.messages || [],
+          step: data.step || "EMOTIONAL",
+          createdAt: createdAtDate,
+          preview: data.messages && data.messages.length > 0 
+            ? data.messages[0].text.substring(0, 100) + "..."
+            : "No messages"
+        };
+      });
     } catch (error) {
       console.error("❌ Error getting user chats:", error);
       throw new Error("Failed to load chat history");
@@ -109,12 +129,15 @@ class FirebaseService {
    */
   static async deleteChat(email, chatId) {
     try {
+      const db = admin.firestore();
       await db
         .collection("users")
         .doc(email)
         .collection("chats")
         .doc(chatId)
         .delete();
+      
+      console.log("✅ Deleted chat:", chatId);
     } catch (error) {
       console.error("❌ Error deleting chat:", error);
       throw new Error("Failed to delete chat");
@@ -129,9 +152,10 @@ class FirebaseService {
    */
   static async saveDecision(email, decisionData) {
     try {
+      const db = admin.firestore();
       const decision = {
         ...decisionData,
-        createdAt: serverTimestamp()
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
       const decisionRef = await db
@@ -140,6 +164,7 @@ class FirebaseService {
         .collection("decisions")
         .add(decision);
 
+      console.log("✅ Saved decision:", decisionRef.id);
       return decisionRef.id;
     } catch (error) {
       console.error("❌ Error saving decision:", error);
@@ -155,6 +180,7 @@ class FirebaseService {
    */
   static async getUserDecisions(email, limit = 50) {
     try {
+      const db = admin.firestore();
       const decisionsSnapshot = await db
         .collection("users")
         .doc(email)
@@ -179,6 +205,8 @@ class FirebaseService {
    */
   static async getAdminAnalytics() {
     try {
+      const db = admin.firestore();
+      
       // Get total users
       const usersSnapshot = await db.collection("users").get();
       const totalUsers = usersSnapshot.size;

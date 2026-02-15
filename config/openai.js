@@ -1,16 +1,20 @@
 // config/openai.js - OpenAI Configuration
-const OpenAI = require("openai");
+const OpenAI = require('openai');
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY is not set in environment variables");
-  process.exit(1);
-}
-
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// System prompts for different stages
+// Model configuration
+const CONFIG = {
+  MODEL: "gpt-4o-mini",
+  TEMPERATURE: 0.7,
+  MAX_TOKENS: 150,
+  TOP_P: 0.95
+};
+
+// System prompts for different conversation stages
 const SYSTEM_PROMPTS = {
   EMOTIONAL_SUPPORT: `You are a supportive and insightful decision-making coach. Follow these guidelines strictly:
 
@@ -32,38 +36,31 @@ const SYSTEM_PROMPTS = {
 
 5. FORMAT: Never use bullet points or lists. Speak naturally in 2-3 complete sentences.
 
-6. TRANSITION: When the user seems emotionally ready, gently guide them toward decision-making. Ask: "Would you like help making a decision about something specific?"
-
 Remember: Brief, encouraging, and helpful. That's your mission.`,
 
-  DECISION_SUPPORT: `You are a wise decision-making assistant. Help users clarify their options and criteria.
+  DECISION_SUPPORT: `You are a decision-making coach helping users make structured decisions. 
 
-1. Keep responses to 2-3 sentences.
-2. Ask clarifying questions about their options.
-3. Help them identify what's important to them.
-4. Guide them toward structured decision-making.
+Your role:
+1. Guide users to define their options clearly
+2. Help them identify what criteria matter most
+3. Ask clarifying questions to understand their priorities
+4. Keep responses brief (2-3 sentences)
+5. Be encouraging and supportive
 
-Be supportive and practical.`,
+Remember: You're helping them think through their decision, not making it for them.`,
 
-  RESULT_EXPLANATION: `You are explaining a decision result to the user.
+  RESULT_EXPLANATION: `You are providing a brief, encouraging explanation for why a particular option scored highest based on the user's own criteria and ratings.
 
-1. Keep it to 2-3 sentences.
-2. Explain why this option scored highest.
-3. Provide encouragement and motivation.
-4. Remind them they made a thoughtful choice.
-
-Be positive and affirming.`
+Guidelines:
+- Keep it to 2-3 sentences maximum
+- Be warm and encouraging
+- Reference their specific criteria if relevant
+- Reinforce that this was their thoughtful analysis
+- Don't introduce new concerns or doubts`
 };
 
 module.exports = {
   openai,
-  SYSTEM_PROMPTS,
-  
-  // Configuration constants
-  CONFIG: {
-    MODEL: "gpt-4o-mini",
-    MAX_TOKENS: parseInt(process.env.AI_MAX_TOKENS) || 150,
-    TEMPERATURE: parseFloat(process.env.AI_TEMPERATURE) || 0.7,
-    TOP_P: 0.95
-  }
+  CONFIG,
+  SYSTEM_PROMPTS
 };
