@@ -19,22 +19,14 @@ app.set("views", path.join(__dirname, "views"));
 // ==================== ROUTES ====================
 const authRoutes = require("./routes/auth");
 const chatRoutes = require("./routes/chat");
-// const decisionRoutes = require("./routes/decision");
-// const historyRoutes = require("./routes/history");
 const adminRoutes = require("./routes/admin");
 
-// Public routes (no auth required)
+// Public routes
 app.use("/", authRoutes);
 
-// Protected routes (auth required)
+// Protected routes
 app.use("/chat", chatRoutes);
-app.use("/decision", decisionRoutes);
-app.use("/history", historyRoutes);
 app.use("/admin", adminRoutes);
-
-// ==================== ERROR HANDLING ====================
-const errorHandler = require("./middleware/errorHandler");
-app.use(errorHandler);
 
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
@@ -45,6 +37,16 @@ app.use((req, res) => {
   });
 });
 
+// ==================== ERROR HANDLER ====================
+app.use((err, req, res, next) => {
+  console.error("❌ Error:", err.message);
+  res.status(err.status || 500).render("error", {
+    title: "Error",
+    message: err.message || "Something went wrong",
+    code: err.status || 500
+  });
+});
+
 // ==================== START SERVER ====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -52,20 +54,10 @@ app.listen(PORT, () => {
   console.log("║   🚀 Life Decision Helper Server      ║");
   console.log("╠════════════════════════════════════════╣");
   console.log(`║   📍 Port: ${PORT.toString().padEnd(28)}║`);
-  console.log(`║   🌍 Environment: ${process.env.NODE_ENV || 'development'}           ║`);
-  console.log("║   ✅ Server is running successfully!  ║");
+  console.log(`║   🌍 Environment: ${(process.env.NODE_ENV || 'development').padEnd(18)}║`);
+  console.log("║   ✅ Server running successfully!     ║");
   console.log("╚════════════════════════════════════════╝");
-});
-
-// ==================== GRACEFUL SHUTDOWN ====================
-process.on("SIGTERM", () => {
-  console.log("👋 SIGTERM received. Shutting down gracefully...");
-  process.exit(0);
-});
-
-process.on("SIGINT", () => {
-  console.log("👋 SIGINT received. Shutting down gracefully...");
-  process.exit(0);
+  console.log(`\n🌐 Visit: http://localhost:${PORT}\n`);
 });
 
 module.exports = app;
