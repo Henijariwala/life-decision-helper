@@ -1,0 +1,71 @@
+// server.js - Main Entry Point
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
+
+const app = express();
+
+// ==================== MIDDLEWARE ====================
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
+
+// ==================== VIEW ENGINE ====================
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// ==================== ROUTES ====================
+const authRoutes = require("./routes/auth");
+const chatRoutes = require("./routes/chat");
+// const decisionRoutes = require("./routes/decision");
+// const historyRoutes = require("./routes/history");
+const adminRoutes = require("./routes/admin");
+
+// Public routes (no auth required)
+app.use("/", authRoutes);
+
+// Protected routes (auth required)
+app.use("/chat", chatRoutes);
+app.use("/decision", decisionRoutes);
+app.use("/history", historyRoutes);
+app.use("/admin", adminRoutes);
+
+// ==================== ERROR HANDLING ====================
+const errorHandler = require("./middleware/errorHandler");
+app.use(errorHandler);
+
+// ==================== 404 HANDLER ====================
+app.use((req, res) => {
+  res.status(404).render("error", {
+    title: "Page Not Found",
+    message: "The page you're looking for doesn't exist.",
+    code: 404
+  });
+});
+
+// ==================== START SERVER ====================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("╔════════════════════════════════════════╗");
+  console.log("║   🚀 Life Decision Helper Server      ║");
+  console.log("╠════════════════════════════════════════╣");
+  console.log(`║   📍 Port: ${PORT.toString().padEnd(28)}║`);
+  console.log(`║   🌍 Environment: ${process.env.NODE_ENV || 'development'}           ║`);
+  console.log("║   ✅ Server is running successfully!  ║");
+  console.log("╚════════════════════════════════════════╝");
+});
+
+// ==================== GRACEFUL SHUTDOWN ====================
+process.on("SIGTERM", () => {
+  console.log("👋 SIGTERM received. Shutting down gracefully...");
+  process.exit(0);
+});
+
+process.on("SIGINT", () => {
+  console.log("👋 SIGINT received. Shutting down gracefully...");
+  process.exit(0);
+});
+
+module.exports = app;
