@@ -1,5 +1,5 @@
 // services/firebaseService.js - Firebase Database Operations
-const admin = require("../firebaseAdmin");
+const admin = require("../firebaseAdmin"); // ← Changed from "../firebase"
 
 class FirebaseService {
   static async saveChat(email, chatId, messages) {

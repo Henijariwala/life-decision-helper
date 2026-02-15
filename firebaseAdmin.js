@@ -1,43 +1,35 @@
-// firebase.js - Firebase Admin SDK Initialization (Server-Side)
+// firebaseAdmin.js - Firebase Admin SDK ONLY (Server-Side)
 const admin = require("firebase-admin");
 
 // Prevent multiple initializations
 if (!admin.apps.length) {
   try {
-    let credential;
+    let serviceAccount;
     
-    // Production: Use environment variable with JSON string
+    // Try to load from environment variable first (Production)
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      credential = admin.credential.cert(serviceAccount);
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     } 
-    // Development: Use file
-    else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-      const serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-      credential = admin.credential.cert(serviceAccount);
-    }
-    // Default: Look for serviceAccountKey.json in root
+    // Try to load from file (Development)
     else {
       try {
-        const serviceAccount = require("./serviceAccountKey.json");
-        credential = admin.credential.cert(serviceAccount);
+        serviceAccount = require("./serviceAccountKey.json");
       } catch (err) {
         console.error("❌ Firebase service account key not found!");
-        console.error("💡 Please add serviceAccountKey.json to project root");
-        console.error("💡 Or set FIREBASE_SERVICE_ACCOUNT environment variable");
+        console.error("💡 Create serviceAccountKey.json in project root");
+        console.error("💡 Get it from: Firebase Console → Project Settings → Service Accounts");
         process.exit(1);
       }
     }
     
-    // Initialize Firebase Admin (SERVER-SIDE ONLY - No Analytics!)
+    // Initialize Firebase Admin SDK (SERVER-SIDE ONLY)
     admin.initializeApp({
-      credential: credential,
-      // Do NOT add databaseURL or other client-side configs
+      credential: admin.credential.cert(serviceAccount)
     });
     
-    console.log("✅ Firebase Admin SDK initialized successfully");
+    console.log("✅ Firebase Admin initialized");
   } catch (error) {
-    console.error("❌ Firebase initialization failed:", error.message);
+    console.error("❌ Firebase init failed:", error.message);
     process.exit(1);
   }
 }

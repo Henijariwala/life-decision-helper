@@ -1,5 +1,5 @@
 // middleware/auth.js - Authentication Middleware
-const admin = require("../firebase");
+const admin = require("../firebaseAdmin"); // ← Changed from "../firebase"
 
 const requireAuth = async (req, res, next) => {
   try {
