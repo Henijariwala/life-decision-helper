@@ -105,11 +105,12 @@ router.post("/chat", requireAuth, async (req, res) => {
     chatMessages = [];
   }
 
-  // Create timestamp
-  const timestamp = new Date().toLocaleTimeString('en-US', { 
+  // Create timestamp in IST (Indian Standard Time)
+  const timestamp = new Date().toLocaleTimeString('en-IN', { 
     hour: '2-digit', 
     minute: '2-digit',
-    hour12: true 
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
   });
 
   // Add user message
@@ -231,10 +232,11 @@ router.post("/chat", requireAuth, async (req, res) => {
     const botMessage = { 
       role: "assistant", 
       text: reply.trim(),
-      timestamp: new Date().toLocaleTimeString('en-US', { 
+      timestamp: new Date().toLocaleTimeString('en-IN', { 
         hour: '2-digit', 
         minute: '2-digit',
-        hour12: true 
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
       })
     };
     
@@ -270,10 +272,11 @@ router.post("/chat", requireAuth, async (req, res) => {
     const errorMessage = {
       role: "assistant",
       text: `⚠️ ${error.message || 'Something went wrong. Please try again.'}`,
-      timestamp: new Date().toLocaleTimeString('en-US', { 
+      timestamp: new Date().toLocaleTimeString('en-IN', { 
         hour: '2-digit', 
         minute: '2-digit',
-        hour12: true 
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
       }),
       isError: true
     };

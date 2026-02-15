@@ -300,16 +300,19 @@
               <div class="chat-date">
                 <% if (decision.createdAt) { %>
                   <div class="chat-date-day">
-                    <%= new Date(decision.createdAt).toLocaleDateString('en-US', { 
+                    <%= new Date(decision.createdAt).toLocaleDateString('en-IN', { 
                       month: 'short', 
                       day: 'numeric', 
-                      year: 'numeric' 
+                      year: 'numeric',
+                      timeZone: 'Asia/Kolkata'
                     }) %>
                   </div>
                   <div class="chat-date-time">
-                    <%= new Date(decision.createdAt).toLocaleTimeString('en-US', { 
+                    <%= new Date(decision.createdAt).toLocaleTimeString('en-IN', { 
                       hour: '2-digit', 
-                      minute: '2-digit' 
+                      minute: '2-digit',
+                      hour12: true,
+                      timeZone: 'Asia/Kolkata'
                     }) %>
                   </div>
                 <% } else { %>
