@@ -83,42 +83,60 @@ router.post("/chat", requireAuth, async (req, res) => {
   console.log("📨 NEW MESSAGE REQUEST");
   console.log("==========================================");
   
-  try {
-    const db = admin.firestore();
-    const { message, messages = "[]", chatId = "" } = req.body;
-    
-    console.log("👤 User:", req.user.email);
-    console.log("💬 Message:", message);
-    
-    if (!message || message.trim() === '') {
-      console.error("❌ Empty message");
-      return res.render("chat", { messages: JSON.parse(messages), chatId });
+  const db = admin.firestore();
+  const { message, messages = "[]", chatId = "" } = req.body;
+  
+  console.log("👤 User:", req.user.email);
+  console.log("💬 Message:", message);
+  console.log("🆔 Chat ID:", chatId || "NEW CHAT");
+  
+  // Validate message
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    console.error("❌ Empty message");
+    let chatMessages = [];
+    try {
+      chatMessages = JSON.parse(messages);
+    } catch (e) {
+      chatMessages = [];
     }
-    
-    // Parse messages
-    let chatMessages = JSON.parse(messages);
-    
-    // Add user message
-    const userMessage = {
-      role: "user",
-      text: message.trim(),
-      timestamp: new Date().toLocaleTimeString('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Kolkata'
-      })
-    };
-    
-    chatMessages.push(userMessage);
-    console.log("➕ Added user message");
-    
-    // Save to Firebase
-    const userEmail = req.user.email.trim().toLowerCase();
-    let currentChatId = chatId;
-    
-    console.log("💾 Saving to Firebase...");
-    console.log("   Collection: users/" + userEmail + "/chats");
+    return res.render("chat", { messages: chatMessages, chatId });
+  }
+
+  // Parse messages
+  let chatMessages = [];
+  try {
+    chatMessages = JSON.parse(messages);
+    if (!Array.isArray(chatMessages)) chatMessages = [];
+    console.log("📚 Previous messages:", chatMessages.length);
+  } catch (error) {
+    console.error("❌ Parse error:", error.message);
+    chatMessages = [];
+  }
+
+  // Create timestamp (IST)
+  const timestamp = new Date().toLocaleTimeString('en-IN', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
+  });
+
+  // Add user message
+  const userMessage = { 
+    role: "user", 
+    text: message.trim(),
+    timestamp: timestamp
+  };
+  
+  chatMessages.push(userMessage);
+  console.log("➕ Added user message. Total messages:", chatMessages.length);
+
+  // Save to Firebase
+  let currentChatId = chatId;
+  
+  try {
+    const userEmail = sanitizeEmail(req.user.email);
+    console.log("📧 Sanitized email:", userEmail);
     
     const userRef = db.collection("users").doc(userEmail);
     const chatData = {
@@ -130,16 +148,18 @@ router.post("/chat", requireAuth, async (req, res) => {
     };
     
     if (currentChatId && currentChatId.trim() !== "") {
-      console.log("🔄 Updating existing chat:", currentChatId);
+      // Update existing chat
+      console.log("🔄 Updating chat:", currentChatId);
       
       await userRef
         .collection("chats")
         .doc(currentChatId)
         .set(chatData, { merge: true });
       
-      console.log("✅ Chat updated");
+      console.log("✅ CHAT UPDATED SUCCESSFULLY");
     } else {
-      console.log("➕ Creating new chat");
+      // Create new chat
+      console.log("➕ Creating new chat...");
       
       chatData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       
@@ -151,23 +171,74 @@ router.post("/chat", requireAuth, async (req, res) => {
       console.log("✅ NEW CHAT CREATED:", currentChatId);
     }
     
-    // VERIFY the save
+    // Verify save
     console.log("🔍 Verifying save...");
     const verifyDoc = await userRef.collection("chats").doc(currentChatId).get();
-    
     if (verifyDoc.exists) {
-      console.log("✅ VERIFIED: Chat exists in Firebase!");
-      console.log("   Messages:", verifyDoc.data().messages.length);
+      console.log("✅ VERIFIED: Chat exists in Firebase");
+      const savedData = verifyDoc.data();
+      console.log("📊 Messages saved:", savedData.messages ? savedData.messages.length : 0);
     } else {
-      console.error("❌ VERIFICATION FAILED: Chat not found!");
+      console.error("❌ VERIFICATION FAILED: Chat not found after save");
     }
     
-    // Get AI response (simplified for now)
-    const botMessage = {
-      role: "assistant",
-      text: "I'm here to help! (Testing - AI integration pending)",
-      timestamp: new Date().toLocaleTimeString('en-IN', {
-        hour: '2-digit',
+  } catch (error) {
+    console.error("❌ FIREBASE SAVE ERROR:");
+    console.error("   Message:", error.message);
+    console.error("   Code:", error.code);
+    console.error("   Stack:", error.stack);
+  }
+
+  // Get AI Response
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OpenAI API key not configured");
+    }
+
+    console.log("🤖 Requesting AI response...");
+
+    const conversationHistory = chatMessages
+      .filter(msg => msg.text && msg.text.trim() !== '')
+      .map(msg => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.text.trim()
+      }));
+
+    const response = await fetch(OPENAI_URL, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a supportive decision-making coach. Keep responses brief (2-3 sentences)."
+          },
+          ...conversationHistory
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || "AI request failed");
+    }
+
+    const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content || "I couldn't respond.";
+    
+    console.log("✅ AI response received");
+
+    const botMessage = { 
+      role: "assistant", 
+      text: reply.trim(),
+      timestamp: new Date().toLocaleTimeString('en-IN', { 
+        hour: '2-digit', 
         minute: '2-digit',
         hour12: true,
         timeZone: 'Asia/Kolkata'
@@ -175,28 +246,51 @@ router.post("/chat", requireAuth, async (req, res) => {
     };
     
     chatMessages.push(botMessage);
-    
+    console.log("➕ Added AI message. Total messages:", chatMessages.length);
+
     // Save AI response
-    await userRef.collection("chats").doc(currentChatId).set({
-      messages: chatMessages,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastMessage: botMessage.text,
-      messageCount: chatMessages.length
-    }, { merge: true });
-    
-    console.log("✅ AI message saved");
-    console.log("==========================================\n");
-    
-    res.render("chat", { messages: chatMessages, chatId: currentChatId });
-    
+    if (currentChatId) {
+      try {
+        const userEmail = sanitizeEmail(req.user.email);
+        
+        await db
+          .collection("users")
+          .doc(userEmail)
+          .collection("chats")
+          .doc(currentChatId)
+          .set({
+            messages: chatMessages,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastMessage: reply.trim(),
+            messageCount: chatMessages.length
+          }, { merge: true });
+        
+        console.log("✅ AI MESSAGE SAVED");
+      } catch (error) {
+        console.error("❌ Error saving AI message:", error.message);
+      }
+    }
+
   } catch (error) {
-    console.error("❌ ROUTE ERROR:");
-    console.error("   Message:", error.message);
-    console.error("   Code:", error.code);
-    console.error("   Stack:", error.stack);
+    console.error("❌ AI ERROR:", error.message);
+
+    const errorMessage = {
+      role: "assistant",
+      text: `⚠️ ${error.message}`,
+      timestamp: new Date().toLocaleTimeString('en-IN', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
+      }),
+      isError: true
+    };
     
-    res.render("chat", { messages: [], chatId: "" });
+    chatMessages.push(errorMessage);
   }
+
+  console.log("==========================================\n");
+  res.render("chat", { messages: chatMessages, chatId: currentChatId });
 });
 
 // HISTORY PAGE
