@@ -5,16 +5,15 @@ const admin = require("../firebaseAdmin");
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
-// Helper function to sanitize email for Firestore document ID
+// Helper to sanitize email
 function sanitizeEmail(email) {
   if (!email || typeof email !== 'string') {
-    throw new Error('Invalid email provided');
+    throw new Error('Invalid email');
   }
-  // Remove any characters that might cause issues in Firestore paths
   return email.trim().toLowerCase();
 }
 
-// HOME PAGE (Login)
+// HOME PAGE
 router.get("/", (req, res) => {
   res.render("index");
 });
@@ -30,12 +29,16 @@ router.get("/chat", requireAuth, async (req, res) => {
     const db = admin.firestore();
     const chatId = req.query.chatId || "";
     
+    console.log("📖 Loading chat page for user:", req.user.email);
+    
     let messages = [];
     let currentChatId = chatId;
 
     if (chatId && chatId.trim() !== "") {
       try {
         const userEmail = sanitizeEmail(req.user.email);
+        
+        console.log("🔍 Fetching chat:", chatId, "for user:", userEmail);
         
         const chatDoc = await db
           .collection("users")
@@ -47,65 +50,61 @@ router.get("/chat", requireAuth, async (req, res) => {
         if (chatDoc.exists) {
           const data = chatDoc.data();
           messages = data.messages || [];
-          console.log(`✅ Loaded chat ${chatId} with ${messages.length} messages`);
+          console.log(`✅ Loaded ${messages.length} messages`);
         } else {
-          console.log("⚠️ Chat not found, starting new chat");
+          console.log("⚠️ Chat not found");
           currentChatId = "";
         }
       } catch (err) {
-        console.error("❌ Error loading chat:", err.message);
+        console.error("❌ Error loading chat:", err);
         currentChatId = "";
       }
     }
 
     res.render("chat", { messages, chatId: currentChatId });
   } catch (error) {
-    console.error("❌ Error loading chat page:", error.message);
+    console.error("❌ Page load error:", error);
     res.render("chat", { messages: [], chatId: "" });
   }
 });
 
 // CHAT PAGE - POST
 router.post("/chat", requireAuth, async (req, res) => {
+  console.log("\n==========================================");
+  console.log("📨 NEW MESSAGE REQUEST");
+  console.log("==========================================");
+  
   const db = admin.firestore();
-  
-  console.log("📥 Request received");
-  
   const { message, messages = "[]", chatId = "" } = req.body;
+  
+  console.log("👤 User:", req.user.email);
+  console.log("💬 Message:", message);
+  console.log("🆔 Chat ID:", chatId || "NEW CHAT");
   
   // Validate message
   if (!message || typeof message !== 'string' || message.trim() === '') {
-    console.error("❌ Empty or invalid message received");
-    
+    console.error("❌ Empty message");
     let chatMessages = [];
     try {
       chatMessages = JSON.parse(messages);
-      if (!Array.isArray(chatMessages)) {
-        chatMessages = [];
-      }
-    } catch (error) {
+    } catch (e) {
       chatMessages = [];
     }
-    
-    return res.render("chat", { 
-      messages: chatMessages, 
-      chatId: chatId 
-    });
+    return res.render("chat", { messages: chatMessages, chatId });
   }
 
-  // Parse previous messages
+  // Parse messages
   let chatMessages = [];
   try {
     chatMessages = JSON.parse(messages);
-    if (!Array.isArray(chatMessages)) {
-      chatMessages = [];
-    }
+    if (!Array.isArray(chatMessages)) chatMessages = [];
+    console.log("📚 Previous messages:", chatMessages.length);
   } catch (error) {
-    console.error("❌ Error parsing messages:", error.message);
+    console.error("❌ Parse error:", error.message);
     chatMessages = [];
   }
 
-  // Create timestamp in IST (Indian Standard Time)
+  // Create timestamp (IST)
   const timestamp = new Date().toLocaleTimeString('en-IN', { 
     hour: '2-digit', 
     minute: '2-digit',
@@ -120,82 +119,82 @@ router.post("/chat", requireAuth, async (req, res) => {
     timestamp: timestamp
   };
   
-  console.log("✅ User message:", userMessage.text.substring(0, 50) + "...");
   chatMessages.push(userMessage);
+  console.log("➕ Added user message. Total messages:", chatMessages.length);
 
   // Save to Firebase
   let currentChatId = chatId;
   
   try {
     const userEmail = sanitizeEmail(req.user.email);
-    console.log("📧 User email (sanitized):", userEmail);
+    console.log("📧 Sanitized email:", userEmail);
     
     const userRef = db.collection("users").doc(userEmail);
+    const chatData = {
+      messages: chatMessages,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastMessage: message.trim(),
+      messageCount: chatMessages.length,
+      userId: userEmail
+    };
     
     if (currentChatId && currentChatId.trim() !== "") {
       // Update existing chat
-      console.log("🔄 Updating existing chat:", currentChatId);
+      console.log("🔄 Updating chat:", currentChatId);
       
       await userRef
         .collection("chats")
         .doc(currentChatId)
-        .set({
-          messages: chatMessages,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          lastMessage: message.trim(),
-          messageCount: chatMessages.length,
-          userId: userEmail
-        }, { merge: true });
+        .set(chatData, { merge: true });
       
-      console.log("✅ Updated existing chat:", currentChatId);
+      console.log("✅ CHAT UPDATED SUCCESSFULLY");
     } else {
       // Create new chat
-      console.log("➕ Creating new chat");
+      console.log("➕ Creating new chat...");
+      
+      chatData.createdAt = admin.firestore.FieldValue.serverTimestamp();
       
       const newChatRef = await userRef
         .collection("chats")
-        .add({
-          messages: chatMessages,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          lastMessage: message.trim(),
-          messageCount: chatMessages.length,
-          userId: userEmail
-        });
+        .add(chatData);
       
       currentChatId = newChatRef.id;
-      console.log("✅ Created new chat:", currentChatId);
+      console.log("✅ NEW CHAT CREATED:", currentChatId);
     }
-  } catch (error) {
-    console.error("❌ Firebase error:", error.message);
-    console.error("Error code:", error.code);
-    console.error("Error details:", error.details);
     
-    // Continue with chat even if Firebase fails
-    console.log("⚠️ Continuing without Firebase save");
+    // Verify save
+    console.log("🔍 Verifying save...");
+    const verifyDoc = await userRef.collection("chats").doc(currentChatId).get();
+    if (verifyDoc.exists) {
+      console.log("✅ VERIFIED: Chat exists in Firebase");
+      const savedData = verifyDoc.data();
+      console.log("📊 Messages saved:", savedData.messages ? savedData.messages.length : 0);
+    } else {
+      console.error("❌ VERIFICATION FAILED: Chat not found after save");
+    }
+    
+  } catch (error) {
+    console.error("❌ FIREBASE SAVE ERROR:");
+    console.error("   Message:", error.message);
+    console.error("   Code:", error.code);
+    console.error("   Stack:", error.stack);
   }
 
   // Get AI Response
   try {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+      throw new Error("OpenAI API key not configured");
     }
 
     console.log("🤖 Requesting AI response...");
 
-    // Build conversation history
     const conversationHistory = chatMessages
-      .filter(msg => msg.text && typeof msg.text === 'string' && msg.text.trim() !== '')
+      .filter(msg => msg.text && msg.text.trim() !== '')
       .map(msg => ({
         role: msg.role === "assistant" ? "assistant" : "user",
         content: msg.text.trim()
       }));
 
-    if (conversationHistory.length === 0) {
-      throw new Error("No valid messages to send to AI");
-    }
-
-    // Call OpenAI API
     const response = await fetch(OPENAI_URL, {
       method: "POST",
       headers: { 
@@ -207,28 +206,25 @@ router.post("/chat", requireAuth, async (req, res) => {
         messages: [
           {
             role: "system",
-            content: `You are a supportive and insightful decision-making coach. Keep responses to 2-3 sentences maximum. Be warm, encouraging, and helpful.`
+            content: "You are a supportive decision-making coach. Keep responses brief (2-3 sentences)."
           },
           ...conversationHistory
         ],
         temperature: 0.7,
-        max_tokens: 150,
-        top_p: 0.95
+        max_tokens: 150
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ OpenAI API Error:", errorData);
       throw new Error(errorData.error?.message || "AI request failed");
     }
 
     const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content || "I couldn't generate a response.";
+    const reply = data?.choices?.[0]?.message?.content || "I couldn't respond.";
     
     console.log("✅ AI response received");
 
-    // Add bot message
     const botMessage = { 
       role: "assistant", 
       text: reply.trim(),
@@ -241,9 +237,10 @@ router.post("/chat", requireAuth, async (req, res) => {
     };
     
     chatMessages.push(botMessage);
+    console.log("➕ Added AI message. Total messages:", chatMessages.length);
 
-    // Save bot message to Firebase
-    if (currentChatId && currentChatId.trim() !== "") {
+    // Save AI response
+    if (currentChatId) {
       try {
         const userEmail = sanitizeEmail(req.user.email);
         
@@ -259,19 +256,18 @@ router.post("/chat", requireAuth, async (req, res) => {
             messageCount: chatMessages.length
           }, { merge: true });
         
-        console.log("✅ Bot message saved to Firebase");
+        console.log("✅ AI MESSAGE SAVED");
       } catch (error) {
-        console.error("❌ Error saving bot message:", error.message);
+        console.error("❌ Error saving AI message:", error.message);
       }
     }
 
   } catch (error) {
     console.error("❌ AI ERROR:", error.message);
 
-    // Add error message
     const errorMessage = {
       role: "assistant",
-      text: `⚠️ ${error.message || 'Something went wrong. Please try again.'}`,
+      text: `⚠️ ${error.message}`,
       timestamp: new Date().toLocaleTimeString('en-IN', { 
         hour: '2-digit', 
         minute: '2-digit',
@@ -282,29 +278,9 @@ router.post("/chat", requireAuth, async (req, res) => {
     };
     
     chatMessages.push(errorMessage);
-
-    // Try to save error message
-    if (currentChatId && currentChatId.trim() !== "") {
-      try {
-        const userEmail = sanitizeEmail(req.user.email);
-        
-        await db
-          .collection("users")
-          .doc(userEmail)
-          .collection("chats")
-          .doc(currentChatId)
-          .set({
-            messages: chatMessages,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-      } catch (fbError) {
-        console.error("❌ Error saving error message:", fbError.message);
-      }
-    }
   }
 
-  // Render chat page
-  console.log("📄 Rendering chat with", chatMessages.length, "messages");
+  console.log("==========================================\n");
   res.render("chat", { messages: chatMessages, chatId: currentChatId });
 });
 
@@ -314,7 +290,7 @@ router.get("/history", requireAuth, async (req, res) => {
     const db = admin.firestore();
     const userEmail = sanitizeEmail(req.user.email);
 
-    console.log("📚 Loading chat history for:", userEmail);
+    console.log("📚 Loading history for:", userEmail);
 
     const chatsSnap = await db
       .collection("users")
@@ -324,38 +300,23 @@ router.get("/history", requireAuth, async (req, res) => {
       .limit(50)
       .get();
 
+    console.log("📊 Found", chatsSnap.docs.length, "chats");
+
     const decisions = chatsSnap.docs.map(doc => {
       const data = doc.data();
-      
-      let createdAt = null;
-      if (data.createdAt) {
-        createdAt = data.createdAt.toDate();
-      }
-      
-      let preview = "Empty chat";
-      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-        const firstMessage = data.messages[0];
-        if (firstMessage && firstMessage.text) {
-          preview = firstMessage.text.substring(0, 150) + 
-                    (firstMessage.text.length > 150 ? "..." : "");
-        }
-      }
       
       return {
         id: doc.id,
         messages: data.messages || [],
-        createdAt: createdAt,
-        preview: preview,
-        messageCount: data.messageCount || (data.messages ? data.messages.length : 0)
+        createdAt: data.createdAt ? data.createdAt.toDate() : null,
+        preview: data.messages?.[0]?.text?.substring(0, 150) || "Empty chat",
+        messageCount: data.messageCount || 0
       };
     });
-
-    console.log(`✅ Loaded ${decisions.length} chat histories`);
 
     res.render("history", { decisions });
   } catch (error) {
     console.error("❌ History error:", error.message);
-    console.error("Error code:", error.code);
     res.render("history", { decisions: [] });
   }
 });
@@ -364,25 +325,19 @@ router.get("/history", requireAuth, async (req, res) => {
 router.delete("/chat/:chatId", requireAuth, async (req, res) => {
   try {
     const db = admin.firestore();
-    const chatId = req.params.chatId;
     const userEmail = sanitizeEmail(req.user.email);
 
-    if (!chatId || chatId.trim() === "") {
-      throw new Error("Invalid chat ID");
-    }
-
-    console.log("🗑️ Deleting chat:", chatId);
+    console.log("🗑️ Deleting chat:", req.params.chatId);
 
     await db
       .collection("users")
       .doc(userEmail)
       .collection("chats")
-      .doc(chatId)
+      .doc(req.params.chatId)
       .delete();
 
-    console.log("✅ Chat deleted successfully");
-
-    res.json({ success: true, message: "Chat deleted successfully" });
+    console.log("✅ Deleted");
+    res.json({ success: true });
   } catch (error) {
     console.error("❌ Delete error:", error.message);
     res.status(500).json({ success: false, error: error.message });
