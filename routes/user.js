@@ -1,4 +1,4 @@
-//routes/user.js - All User Routes (Fixed)
+//routes/user.js - Fixed with null checks
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middleware/auth");
@@ -25,7 +25,6 @@ router.get("/chat", requireAuth, async (req, res) => {
     let messages = [];
     let currentChatId = chatId;
 
-    // If chatId is provided, load existing chat
     if (chatId) {
       try {
         const chatDoc = await db
@@ -60,19 +59,32 @@ router.post("/chat", requireAuth, async (req, res) => {
   const db = admin.firestore();
   const { message, messages = "[]", chatId = "" } = req.body;
   
+  // CRITICAL FIX: Validate message exists and is not empty
+  if (!message || typeof message !== 'string' || message.trim() === '') {
+    console.error("❌ Empty or invalid message received");
+    return res.render("chat", { 
+      messages: JSON.parse(messages), 
+      chatId: chatId 
+    });
+  }
+
   // Parse previous messages
   let chatMessages = [];
   try {
     chatMessages = JSON.parse(messages);
+    // Ensure chatMessages is an array
+    if (!Array.isArray(chatMessages)) {
+      chatMessages = [];
+    }
   } catch (error) {
     console.error("Error parsing messages:", error);
     chatMessages = [];
   }
 
-  // Add user message
+  // Add user message with validation
   const userMessage = { 
     role: "user", 
-    text: message,
+    text: message.trim(), // Trim whitespace
     timestamp: new Date().toLocaleTimeString()
   };
   
@@ -121,11 +133,18 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     console.log("🔄 Sending request to OpenAI API...");
 
-    // Build conversation history for OpenAI
-    const conversationHistory = chatMessages.map(msg => ({
-      role: msg.role === "assistant" ? "assistant" : "user",
-      content: msg.text
-    }));
+    // Build conversation history for OpenAI with validation
+    const conversationHistory = chatMessages
+      .filter(msg => msg.text && typeof msg.text === 'string' && msg.text.trim() !== '') // Filter out null/empty messages
+      .map(msg => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.text.trim()
+      }));
+
+    // Ensure we have at least one message
+    if (conversationHistory.length === 0) {
+      throw new Error("No valid messages to send to OpenAI");
+    }
 
     // Call OpenAI API
     const response = await fetch(OPENAI_URL, {
@@ -147,13 +166,11 @@ router.post("/chat", requireAuth, async (req, res) => {
    - Acknowledge their wisdom and good judgment
    - Celebrate their positive thinking
    - Reinforce their strengths
-   - Examples: "That's excellent thinking! You're considering all the right factors." or "I love how you're approaching this thoughtfully."
 
 3. GENTLE GUIDANCE: When the user seems to be going in a problematic direction:
    - Gently point out potential concerns without being harsh
    - Ask thoughtful questions to help them reconsider
    - Suggest alternative perspectives kindly
-   - Examples: "I hear you, but have you considered how this might affect your long-term goals?" or "That path might be challenging - what if we explored some other options?"
 
 4. TONE: Always be warm, supportive, and non-judgmental. You're a caring friend who wants the best for them.
 
@@ -185,15 +202,20 @@ Remember: Brief, encouraging, and helpful. That's your mission.`
     const data = await response.json();
     console.log("✅ OpenAI Response Received");
 
-    // Extract AI response
+    // Extract AI response with validation
     const reply =
       data?.choices?.[0]?.message?.content ||
       "🤖 I couldn't generate a response. Please try again.";
 
+    // Validate reply is not null or empty
+    const validReply = (reply && typeof reply === 'string' && reply.trim() !== '') 
+      ? reply.trim() 
+      : "I'm here to help! Please tell me more.";
+
     // Add bot message
     const botMessage = { 
       role: "assistant", 
-      text: reply,
+      text: validReply,
       timestamp: new Date().toLocaleTimeString()
     };
     
@@ -222,7 +244,7 @@ Remember: Brief, encouraging, and helpful. That's your mission.`
     // Add error message
     const errorMessage = {
       role: "assistant",
-      text: `⚠️ AI error: ${error.message}`,
+      text: `⚠️ ${error.message || 'Something went wrong. Please try again.'}`,
       timestamp: new Date().toLocaleTimeString(),
       isError: true
     };
@@ -272,14 +294,21 @@ router.get("/history", requireAuth, async (req, res) => {
         createdAtDate = data.createdAt.toDate();
       }
       
+      // Get preview with null check
+      let preview = "Empty chat";
+      if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        const firstMessage = data.messages[0];
+        if (firstMessage && firstMessage.text) {
+          preview = firstMessage.text.substring(0, 100) + "...";
+        }
+      }
+      
       return {
         id: doc.id,
         messages: data.messages || [],
         step: data.step,
         createdAt: createdAtDate,
-        preview: data.messages && data.messages.length > 0 
-          ? data.messages[0].text.substring(0, 100) + "..."
-          : "No messages"
+        preview: preview
       };
     });
 
