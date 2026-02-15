@@ -1,4 +1,4 @@
-//routes/user.js
+//routes/user.js - All User Routes (Fixed)
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middleware/auth");
@@ -127,7 +127,7 @@ router.post("/chat", requireAuth, async (req, res) => {
       content: msg.text
     }));
 
-    // Call OpenAI API with UPDATED SYSTEM PROMPT
+    // Call OpenAI API
     const response = await fetch(OPENAI_URL, {
       method: "POST",
       headers: { 
@@ -164,7 +164,7 @@ Remember: Brief, encouraging, and helpful. That's your mission.`
           ...conversationHistory
         ],
         temperature: 0.7,
-        max_tokens: 150, // Reduced to enforce brevity
+        max_tokens: 150,
         top_p: 0.95
       })
     });
