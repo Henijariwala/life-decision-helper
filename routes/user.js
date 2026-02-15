@@ -1,4 +1,3 @@
-//routes/user.js - Fixed with null checks
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middleware/auth");
@@ -57,13 +56,30 @@ router.get("/chat", requireAuth, async (req, res) => {
 // CHAT PAGE - POST (Handle message submission)
 router.post("/chat", requireAuth, async (req, res) => {
   const db = admin.firestore();
+  
+  console.log("📥 Request body:", req.body);
+  
   const { message, messages = "[]", chatId = "" } = req.body;
   
   // CRITICAL FIX: Validate message exists and is not empty
   if (!message || typeof message !== 'string' || message.trim() === '') {
     console.error("❌ Empty or invalid message received");
+    console.error("Message value:", message);
+    
+    // Parse previous messages for rendering
+    let chatMessages = [];
+    try {
+      chatMessages = JSON.parse(messages);
+      if (!Array.isArray(chatMessages)) {
+        chatMessages = [];
+      }
+    } catch (error) {
+      console.error("Error parsing messages:", error);
+      chatMessages = [];
+    }
+    
     return res.render("chat", { 
-      messages: JSON.parse(messages), 
+      messages: chatMessages, 
       chatId: chatId 
     });
   }
@@ -72,7 +88,6 @@ router.post("/chat", requireAuth, async (req, res) => {
   let chatMessages = [];
   try {
     chatMessages = JSON.parse(messages);
-    // Ensure chatMessages is an array
     if (!Array.isArray(chatMessages)) {
       chatMessages = [];
     }
@@ -84,10 +99,11 @@ router.post("/chat", requireAuth, async (req, res) => {
   // Add user message with validation
   const userMessage = { 
     role: "user", 
-    text: message.trim(), // Trim whitespace
+    text: message.trim(),
     timestamp: new Date().toLocaleTimeString()
   };
   
+  console.log("✅ User message:", userMessage);
   chatMessages.push(userMessage);
 
   // Save user message to Firebase immediately
@@ -135,7 +151,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     // Build conversation history for OpenAI with validation
     const conversationHistory = chatMessages
-      .filter(msg => msg.text && typeof msg.text === 'string' && msg.text.trim() !== '') // Filter out null/empty messages
+      .filter(msg => msg.text && typeof msg.text === 'string' && msg.text.trim() !== '')
       .map(msg => ({
         role: msg.role === "assistant" ? "assistant" : "user",
         content: msg.text.trim()
@@ -145,6 +161,8 @@ router.post("/chat", requireAuth, async (req, res) => {
     if (conversationHistory.length === 0) {
       throw new Error("No valid messages to send to OpenAI");
     }
+
+    console.log("📤 Conversation history:", JSON.stringify(conversationHistory, null, 2));
 
     // Call OpenAI API
     const response = await fetch(OPENAI_URL, {
@@ -212,6 +230,8 @@ Remember: Brief, encouraging, and helpful. That's your mission.`
       ? reply.trim() 
       : "I'm here to help! Please tell me more.";
 
+    console.log("🤖 AI Reply:", validReply);
+
     // Add bot message
     const botMessage = { 
       role: "assistant", 
@@ -270,6 +290,7 @@ Remember: Brief, encouraging, and helpful. That's your mission.`
   }
 
   // Render chat page with updated messages
+  console.log("📄 Rendering chat with", chatMessages.length, "messages");
   res.render("chat", { messages: chatMessages, chatId: currentChatId });
 });
 
