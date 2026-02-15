@@ -1,6 +1,7 @@
+//routes/admin.js
 const express = require("express");
 const requireAuth = require("../middleware/auth");
-const adminOnly = require("../middleware/adminOnly");
+// const adminOnly = require("../middleware/adminOnly");
 
 const router = express.Router();
 
