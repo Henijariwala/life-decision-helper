@@ -9,14 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --cream: #FAF7F2;
-      --beige: #E8DCC4;
-      --beige-dark: #D4C5A9;
-      --brown: #8B7355;
-      --brown-dark: #6B5744;
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --green-soft: #4A7C2F;
+      --sage: #8BA888;
       --white: #FFFFFF;
-      --text: #3E3429;
-      --text-light: #7D6E5C;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
     }
 
     * {
@@ -27,7 +28,7 @@
 
     body {
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
+      background: var(--ivory);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -44,8 +45,8 @@
       right: 0;
       bottom: 0;
       background-image: 
-        radial-gradient(circle at 20% 30%, rgba(232, 220, 196, 0.4) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(212, 197, 169, 0.3) 0%, transparent 40%);
+        radial-gradient(circle at 20% 30%, rgba(138, 168, 136, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(45, 80, 22, 0.08) 0%, transparent 40%);
       pointer-events: none;
     }
 
@@ -89,7 +90,7 @@
       font-family: 'Cormorant Garamond', serif;
       font-size: 3rem;
       font-weight: 600;
-      color: var(--brown-dark);
+      color: var(--green);
       margin-bottom: 0.5rem;
       letter-spacing: -0.02em;
     }
@@ -107,9 +108,9 @@
       border-radius: 2px;
       padding: 3rem 2.5rem;
       box-shadow: 
-        0 1px 3px rgba(0, 0, 0, 0.05),
-        0 10px 40px rgba(139, 115, 85, 0.08);
-      border: 1px solid var(--beige);
+        0 1px 3px rgba(45, 80, 22, 0.05),
+        0 10px 40px rgba(45, 80, 22, 0.08);
+      border: 1px solid var(--sage);
       position: relative;
     }
 
@@ -120,7 +121,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--beige-dark), var(--brown), var(--beige-dark));
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
     }
 
     #authMessage {
@@ -174,8 +175,8 @@
       padding: 1rem 1.2rem;
       font-size: 0.95rem;
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
-      border: 1.5px solid var(--beige-dark);
+      background: var(--ivory);
+      border: 1.5px solid var(--sage);
       border-radius: 2px;
       color: var(--text);
       transition: all 0.3s ease;
@@ -183,15 +184,15 @@
     }
 
     input:focus {
-      border-color: var(--brown);
+      border-color: var(--green);
       background: var(--white);
-      box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
     }
 
     input:focus + label,
     input:not(:placeholder-shown) + label {
       transform: translateY(-140%) scale(0.85);
-      color: var(--brown);
+      color: var(--green);
       font-weight: 500;
       background: var(--white);
     }
@@ -206,7 +207,7 @@
       pointer-events: none;
       transition: all 0.3s ease;
       padding: 0 0.4rem;
-      background: var(--cream);
+      background: var(--ivory);
     }
 
     .btn-primary {
@@ -220,7 +221,7 @@
       border: none;
       border-radius: 2px;
       cursor: pointer;
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
       transition: all 0.3s ease;
       position: relative;
@@ -239,9 +240,9 @@
     }
 
     .btn-primary:hover {
-      background: var(--brown-dark);
+      background: var(--green-light);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.25);
+      box-shadow: 0 4px 12px rgba(45, 80, 22, 0.25);
     }
 
     .btn-primary:hover::before {
@@ -265,7 +266,7 @@
     .divider::after {
       content: '';
       flex: 1;
-      border-bottom: 1px solid var(--beige-dark);
+      border-bottom: 1px solid var(--sage);
     }
 
     .divider span {
@@ -282,17 +283,17 @@
       font-family: 'Work Sans', sans-serif;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      border: 1.5px solid var(--beige-dark);
+      border: 1.5px solid var(--sage);
       border-radius: 2px;
       cursor: pointer;
       background: transparent;
-      color: var(--brown);
+      color: var(--green);
       transition: all 0.3s ease;
     }
 
     .btn-secondary:hover {
-      background: var(--cream);
-      border-color: var(--brown);
+      background: var(--ivory);
+      border-color: var(--green);
       transform: translateY(-1px);
     }
 

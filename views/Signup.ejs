@@ -9,14 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --cream: #FAF7F2;
-      --beige: #E8DCC4;
-      --beige-dark: #D4C5A9;
-      --brown: #8B7355;
-      --brown-dark: #6B5744;
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --green-soft: #4A7C2F;
+      --sage: #8BA888;
       --white: #FFFFFF;
-      --text: #3E3429;
-      --text-light: #7D6E5C;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
     }
 
     * {
@@ -27,7 +28,7 @@
 
     body {
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
+      background: var(--ivory);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -44,8 +45,8 @@
       right: 0;
       bottom: 0;
       background-image: 
-        radial-gradient(circle at 20% 30%, rgba(232, 220, 196, 0.4) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(212, 197, 169, 0.3) 0%, transparent 40%);
+        radial-gradient(circle at 20% 30%, rgba(138, 168, 136, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(45, 80, 22, 0.08) 0%, transparent 40%);
       pointer-events: none;
     }
 
@@ -58,14 +59,8 @@
     }
 
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .header {
@@ -89,7 +84,7 @@
       font-family: 'Cormorant Garamond', serif;
       font-size: 2.5rem;
       font-weight: 600;
-      color: var(--brown-dark);
+      color: var(--green);
       margin-bottom: 0.5rem;
       letter-spacing: -0.02em;
     }
@@ -106,10 +101,8 @@
       background: var(--white);
       border-radius: 2px;
       padding: 3rem 2.5rem;
-      box-shadow: 
-        0 1px 3px rgba(0, 0, 0, 0.05),
-        0 10px 40px rgba(139, 115, 85, 0.08);
-      border: 1px solid var(--beige);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05), 0 10px 40px rgba(45, 80, 22, 0.08);
+      border: 1px solid var(--sage);
       position: relative;
     }
 
@@ -120,7 +113,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--beige-dark), var(--brown), var(--beige-dark));
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
     }
 
     #authMessage {
@@ -134,39 +127,17 @@
     }
 
     @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    #authMessage.show {
-      display: block;
-    }
-
-    #authMessage.error {
-      background: #FEF2F2;
-      border-left-color: #DC2626;
-      color: #991B1B;
-    }
-
-    #authMessage.success {
-      background: #F0FDF4;
-      border-left-color: #16A34A;
-      color: #166534;
-    }
+    #authMessage.show { display: block; }
+    #authMessage.error { background: #FEF2F2; border-left-color: #DC2626; color: #991B1B; }
+    #authMessage.success { background: #F0FDF4; border-left-color: #16A34A; color: #166534; }
 
     .form-group {
       position: relative;
       margin-bottom: 1.8rem;
-    }
-
-    .input-wrapper {
-      position: relative;
     }
 
     input {
@@ -174,8 +145,8 @@
       padding: 1rem 1.2rem;
       font-size: 0.95rem;
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
-      border: 1.5px solid var(--beige-dark);
+      background: var(--ivory);
+      border: 1.5px solid var(--sage);
       border-radius: 2px;
       color: var(--text);
       transition: all 0.3s ease;
@@ -183,15 +154,15 @@
     }
 
     input:focus {
-      border-color: var(--brown);
+      border-color: var(--green);
       background: var(--white);
-      box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
     }
 
     input:focus + label,
     input:not(:placeholder-shown) + label {
       transform: translateY(-140%) scale(0.85);
-      color: var(--brown);
+      color: var(--green);
       font-weight: 500;
       background: var(--white);
     }
@@ -206,7 +177,7 @@
       pointer-events: none;
       transition: all 0.3s ease;
       padding: 0 0.4rem;
-      background: var(--cream);
+      background: var(--ivory);
     }
 
     .password-hint {
@@ -227,7 +198,7 @@
       border: none;
       border-radius: 2px;
       cursor: pointer;
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
       transition: all 0.3s ease;
       position: relative;
@@ -246,18 +217,13 @@
     }
 
     .btn-primary:hover {
-      background: var(--brown-dark);
+      background: var(--green-light);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.25);
+      box-shadow: 0 4px 12px rgba(45, 80, 22, 0.25);
     }
 
-    .btn-primary:hover::before {
-      left: 100%;
-    }
-
-    .btn-primary:active {
-      transform: translateY(0);
-    }
+    .btn-primary:hover::before { left: 100%; }
+    .btn-primary:active { transform: translateY(0); }
 
     .divider {
       display: flex;
@@ -272,7 +238,7 @@
     .divider::after {
       content: '';
       flex: 1;
-      border-bottom: 1px solid var(--beige-dark);
+      border-bottom: 1px solid var(--sage);
     }
 
     .divider span {
@@ -286,7 +252,7 @@
     }
 
     .signin-link a {
-      color: var(--brown);
+      color: var(--green);
       text-decoration: none;
       font-weight: 500;
       font-size: 0.95rem;
@@ -304,27 +270,17 @@
       left: 1rem;
       right: 1rem;
       height: 1px;
-      background: var(--brown);
+      background: var(--green);
       transform: scaleX(0);
       transition: transform 0.3s ease;
     }
 
-    .signin-link a:hover::after {
-      transform: scaleX(1);
-    }
+    .signin-link a:hover::after { transform: scaleX(1); }
 
     @media (max-width: 480px) {
-      body {
-        padding: 1rem;
-      }
-
-      h1 {
-        font-size: 2rem;
-      }
-
-      .card {
-        padding: 2.5rem 2rem;
-      }
+      body { padding: 1rem; }
+      h1 { font-size: 2rem; }
+      .card { padding: 2.5rem 2rem; }
     }
 
     .btn-primary.loading {
@@ -366,27 +322,14 @@
       <form id="signupForm" onsubmit="return false;">
         <div class="form-group">
           <div class="input-wrapper">
-            <input 
-              id="email" 
-              type="email" 
-              placeholder=" "
-              required
-              autocomplete="email"
-            />
+            <input id="email" type="email" placeholder=" " required autocomplete="email" />
             <label for="email">Email Address</label>
           </div>
         </div>
 
         <div class="form-group">
           <div class="input-wrapper">
-            <input 
-              id="password" 
-              type="password" 
-              placeholder=" "
-              required
-              autocomplete="new-password"
-              minlength="6"
-            />
+            <input id="password" type="password" placeholder=" " required autocomplete="new-password" minlength="6" />
             <label for="password">Password</label>
           </div>
           <div class="password-hint">minimum 6 characters</div>
@@ -394,14 +337,7 @@
 
         <div class="form-group">
           <div class="input-wrapper">
-            <input 
-              id="confirmPassword" 
-              type="password" 
-              placeholder=" "
-              required
-              autocomplete="new-password"
-              minlength="6"
-            />
+            <input id="confirmPassword" type="password" placeholder=" " required autocomplete="new-password" minlength="6" />
             <label for="confirmPassword">Confirm Password</label>
           </div>
         </div>
@@ -423,10 +359,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD4zyIOYaquJ_U9L5iWbPs-Dr-6S7Lfdxg",
@@ -441,10 +374,7 @@
       const el = document.getElementById("authMessage");
       el.className = `${isError ? 'error' : 'success'} show`;
       el.innerText = msg;
-      
-      setTimeout(() => {
-        el.classList.remove('show');
-      }, 5000);
+      setTimeout(() => el.classList.remove('show'), 5000);
     }
 
     window.createAccount = async () => {
@@ -474,36 +404,22 @@
       try {
         const userCred = await createUserWithEmailAndPassword(auth, email, password);
         const token = await userCred.user.getIdToken();
-
         document.cookie = `token=${token}; path=/`;
-        
         showMessage("✓ Account created! Redirecting...", false);
-        
-        setTimeout(() => {
-          window.location.href = "/chat";
-        }, 1500);
+        setTimeout(() => window.location.href = "/chat", 1500);
       } catch (err) {
         btn.classList.remove('loading');
         btn.textContent = 'Create Account';
-        
         let errorMessage = err.message;
-        
-        if (err.code === 'auth/email-already-in-use') {
-          errorMessage = "This email is already registered";
-        } else if (err.code === 'auth/invalid-email') {
-          errorMessage = "Please enter a valid email address";
-        } else if (err.code === 'auth/weak-password') {
-          errorMessage = "Password is too weak";
-        }
-        
+        if (err.code === 'auth/email-already-in-use') errorMessage = "This email is already registered";
+        else if (err.code === 'auth/invalid-email') errorMessage = "Please enter a valid email address";
+        else if (err.code === 'auth/weak-password') errorMessage = "Password is too weak";
         showMessage(errorMessage);
       }
     };
 
     document.getElementById('signupForm').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        createAccount();
-      }
+      if (e.key === 'Enter') createAccount();
     });
   </script>
 </body>
