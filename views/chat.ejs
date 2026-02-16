@@ -9,14 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --cream: #FAF7F2;
-      --beige: #E8DCC4;
-      --beige-dark: #D4C5A9;
-      --brown: #8B7355;
-      --brown-dark: #6B5744;
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --green-soft: #4A7C2F;
+      --sage: #8BA888;
       --white: #FFFFFF;
-      --text: #3E3429;
-      --text-light: #7D6E5C;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
     }
 
     * {
@@ -27,7 +28,7 @@
 
     body {
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
+      background: var(--ivory);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -35,12 +36,12 @@
 
     .header {
       background: var(--white);
-      border-bottom: 1px solid var(--beige);
+      border-bottom: 1px solid var(--sage);
       padding: 1.2rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
     }
 
     .header-left {
@@ -55,7 +56,7 @@
 
     .header h1 {
       font-family: 'Cormorant Garamond', serif;
-      color: var(--brown-dark);
+      color: var(--green);
       font-size: 1.5rem;
       font-weight: 600;
       letter-spacing: -0.01em;
@@ -85,23 +86,23 @@
 
     .btn-secondary {
       background: transparent;
-      color: var(--brown);
-      border: 1.5px solid var(--beige-dark);
+      color: var(--green);
+      border: 1.5px solid var(--sage);
     }
 
     .btn-secondary:hover {
-      background: var(--cream);
-      border-color: var(--brown);
+      background: var(--ivory);
+      border-color: var(--green);
     }
 
     .btn-new-chat {
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
       border: none;
     }
 
     .btn-new-chat:hover {
-      background: var(--brown-dark);
+      background: var(--green-light);
       transform: translateY(-1px);
     }
 
@@ -120,8 +121,8 @@
       background: var(--white);
       border-radius: 2px;
       margin-bottom: 1.5rem;
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
-      border: 1px solid var(--beige);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+      border: 1px solid var(--sage);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -135,7 +136,7 @@
       left: 0;
       right: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--beige-dark), var(--brown), var(--beige-dark));
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
     }
 
     .messages {
@@ -151,11 +152,11 @@
     }
 
     .messages::-webkit-scrollbar-track {
-      background: var(--cream);
+      background: var(--ivory);
     }
 
     .messages::-webkit-scrollbar-thumb {
-      background: var(--beige-dark);
+      background: var(--sage);
       border-radius: 3px;
     }
 
@@ -189,9 +190,9 @@
     }
 
     .message.user .message-content {
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
-      border: 1px solid var(--brown-dark);
+      border: 1px solid var(--green-light);
     }
 
     .message.assistant {
@@ -199,9 +200,9 @@
     }
 
     .message.assistant .message-content {
-      background: var(--cream);
+      background: var(--ivory);
       color: var(--text);
-      border: 1px solid var(--beige);
+      border: 1px solid var(--sage);
     }
 
     .message.error .message-content {
@@ -254,7 +255,7 @@
       font-family: 'Cormorant Garamond', serif;
       font-size: 2rem;
       margin-bottom: 0.75rem;
-      color: var(--brown-dark);
+      color: var(--green);
       font-weight: 600;
     }
 
@@ -277,16 +278,16 @@
       padding: 0.7rem 1.3rem;
       border-radius: 2px;
       font-size: 0.85rem;
-      color: var(--brown);
+      color: var(--green);
       cursor: pointer;
       transition: all 0.3s;
-      border: 1.5px solid var(--beige-dark);
+      border: 1.5px solid var(--sage);
     }
 
     .suggestion-chip:hover {
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
-      border-color: var(--brown);
+      border-color: var(--green);
       transform: translateY(-2px);
     }
 
@@ -294,8 +295,8 @@
       background: var(--white);
       padding: 1.5rem;
       border-radius: 2px;
-      border: 1px solid var(--beige);
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
+      border: 1px solid var(--sage);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
     }
 
     .input-form {
@@ -306,20 +307,20 @@
     .message-input {
       flex: 1;
       padding: 1rem 1.2rem;
-      border: 1.5px solid var(--beige-dark);
+      border: 1.5px solid var(--sage);
       border-radius: 2px;
       font-size: 0.95rem;
       font-family: 'Work Sans', sans-serif;
       transition: all 0.3s;
-      background: var(--cream);
+      background: var(--ivory);
       color: var(--text);
     }
 
     .message-input:focus {
       outline: none;
-      border-color: var(--brown);
+      border-color: var(--green);
       background: var(--white);
-      box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
     }
 
     .message-input::placeholder {
@@ -327,7 +328,7 @@
     }
 
     .btn-primary {
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
       padding: 1rem 2rem;
       font-weight: 500;
@@ -344,7 +345,7 @@
     }
 
     .btn-primary:hover {
-      background: var(--brown-dark);
+      background: var(--green-light);
       transform: translateY(-1px);
     }
 
@@ -413,7 +414,7 @@
           <% }); %>
         <% } else { %>
           <div class="empty-state">
-            <div class="empty-state-icon">🧭</div>
+            <div class="empty-state-icon">🌿</div>
             <h2>Begin Your Journey</h2>
             <p>Share your thoughts, and I'll help you find clarity</p>
             <div class="empty-state-suggestions">

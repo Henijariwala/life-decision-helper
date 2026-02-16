@@ -9,14 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --cream: #FAF7F2;
-      --beige: #E8DCC4;
-      --beige-dark: #D4C5A9;
-      --brown: #8B7355;
-      --brown-dark: #6B5744;
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --green-soft: #4A7C2F;
+      --sage: #8BA888;
       --white: #FFFFFF;
-      --text: #3E3429;
-      --text-light: #7D6E5C;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
     }
 
     * {
@@ -27,18 +28,18 @@
 
     body {
       font-family: 'Work Sans', sans-serif;
-      background: var(--cream);
+      background: var(--ivory);
       min-height: 100vh;
     }
 
     .header {
       background: var(--white);
-      border-bottom: 1px solid var(--beige);
+      border-bottom: 1px solid var(--sage);
       padding: 1.2rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
     }
 
     .header-left {
@@ -53,7 +54,7 @@
 
     .header h1 {
       font-family: 'Cormorant Garamond', serif;
-      color: var(--brown-dark);
+      color: var(--green);
       font-size: 1.5rem;
       font-weight: 600;
       letter-spacing: -0.01em;
@@ -83,23 +84,23 @@
 
     .btn-secondary {
       background: transparent;
-      color: var(--brown);
-      border: 1.5px solid var(--beige-dark);
+      color: var(--green);
+      border: 1.5px solid var(--sage);
     }
 
     .btn-secondary:hover {
-      background: var(--cream);
-      border-color: var(--brown);
+      background: var(--ivory);
+      border-color: var(--green);
     }
 
     .btn-new-chat {
-      background: var(--brown);
+      background: var(--green);
       color: var(--white);
       border: none;
     }
 
     .btn-new-chat:hover {
-      background: var(--brown-dark);
+      background: var(--green-light);
       transform: translateY(-1px);
     }
 
@@ -116,7 +117,7 @@
 
     .page-title {
       font-family: 'Cormorant Garamond', serif;
-      color: var(--brown-dark);
+      color: var(--green);
       font-size: 3rem;
       font-weight: 600;
       margin-bottom: 0.75rem;
@@ -140,8 +141,8 @@
       background: var(--white);
       border-radius: 2px;
       padding: 1.8rem;
-      border: 1px solid var(--beige);
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
+      border: 1px solid var(--sage);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
       transition: all 0.3s ease;
       cursor: pointer;
       position: relative;
@@ -155,13 +156,13 @@
       left: 0;
       right: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--beige-dark), var(--brown), var(--beige-dark));
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
     }
 
     .chat-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(139, 115, 85, 0.12);
-      border-color: var(--beige-dark);
+      box-shadow: 0 4px 12px rgba(45, 80, 22, 0.12);
+      border-color: var(--green-soft);
     }
 
     .chat-header {
@@ -185,7 +186,7 @@
 
     .chat-date-day {
       font-weight: 600;
-      color: var(--brown);
+      color: var(--green);
       font-size: 0.85rem;
       letter-spacing: 0.02em;
     }
@@ -212,7 +213,7 @@
       justify-content: space-between;
       align-items: center;
       padding-top: 1rem;
-      border-top: 1px solid var(--beige);
+      border-top: 1px solid var(--sage);
     }
 
     .chat-message-count {
@@ -243,8 +244,8 @@
     }
 
     .btn-icon:hover {
-      background: var(--cream);
-      color: var(--brown);
+      background: var(--ivory);
+      color: var(--green);
     }
 
     .btn-delete:hover {
@@ -257,8 +258,8 @@
       padding: 5rem 2rem;
       background: var(--white);
       border-radius: 2px;
-      border: 1px solid var(--beige);
-      box-shadow: 0 1px 3px rgba(139, 115, 85, 0.05);
+      border: 1px solid var(--sage);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
     }
 
     .empty-state-icon {
@@ -269,7 +270,7 @@
     .empty-state h2 {
       font-family: 'Cormorant Garamond', serif;
       font-size: 2rem;
-      color: var(--brown-dark);
+      color: var(--green);
       margin-bottom: 0.75rem;
       font-weight: 600;
     }
@@ -333,7 +334,7 @@
         <% decisions.forEach(function(decision) { %>
           <div class="chat-card" onclick="openChat('<%= decision.id %>')">
             <div class="chat-header">
-              <div class="chat-icon">💭</div>
+              <div class="chat-icon">🌿</div>
               <div class="chat-date">
                 <% if (decision.createdAt) { %>
                   <div class="chat-date-day">
@@ -379,7 +380,7 @@
       </div>
     <% } else { %>
       <div class="empty-state">
-        <div class="empty-state-icon">🧭</div>
+        <div class="empty-state-icon">🌿</div>
         <h2>No Conversations Yet</h2>
         <p>Your journey begins with a single question</p>
         <a href="/chat" class="btn btn-new-chat">
