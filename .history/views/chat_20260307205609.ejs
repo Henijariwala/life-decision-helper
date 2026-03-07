@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversation — Life Decision Helper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --sage: #8BA888;
+      --white: #FFFFFF;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; background: var(--ivory); }
+
+    /* ══ TOPBAR ══ */
+    .topbar {
+      height: 56px; flex-shrink: 0;
+      background: var(--white);
+      border-bottom: 1px solid rgba(139,168,136,.3);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.4rem;
+      box-shadow: 0 1px 8px rgba(45,80,22,.05);
+      animation: topIn .4s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes topIn { from { opacity:0; transform:translateY(-56px); } to { opacity:1; transform:translateY(0); } }
+
+    .tl { display:flex; align-items:center; gap:.75rem; }
+    .logo-box {
+      width:30px; height:30px; background:var(--green); border-radius:7px;
+      display:flex; align-items:center; justify-content:center; font-size:.85rem;
+      cursor:default; transition:transform .3s;
+    }
+    .logo-box:hover { transform:rotate(12deg) scale(1.12); }
+    .top-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:600; color:var(--green); }
+    .top-sep { width:1px; height:15px; background:rgba(139,168,136,.4); }
+    .top-id {
+      font-family:'DM Mono',monospace; font-size:.62rem; color:var(--text-light);
+      background:var(--ivory); border:1px solid rgba(139,168,136,.28);
+      padding:.18rem .55rem; border-radius:4px;
+    }
+    .tr { display:flex; align-items:center; gap:.35rem; }
+    .btn {
+      display:inline-flex; align-items:center; gap:.35rem;
+      padding:.38rem .85rem; border-radius:6px; font-size:.74rem; font-weight:500;
+      cursor:pointer; transition:all .2s; text-decoration:none;
+      font-family:'DM Sans',sans-serif; border:none;
+    }
+    .btn-p { background:var(--green); color:var(--ivory); }
+    .btn-p:hover { background:var(--green-light); transform:translateY(-1px); }
+    .btn-g { background:transparent; color:var(--text-light); border:1px solid transparent; }
+    .btn-g:hover { background:var(--ivory); color:var(--green); border-color:rgba(139,168,136,.35); }
+
+    /* ══ LAYOUT ══ */
+    .layout {
+      flex:1; display:flex; overflow:hidden;
+      height: calc(100vh - 56px);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width:220px; flex-shrink:0;
+      background:var(--white);
+      border-right:1px solid rgba(139,168,136,.28);
+      display:flex; flex-direction:column;
+      overflow-y:auto; overflow-x:hidden;
+      animation:sbIn .5s cubic-bezier(.22,1,.36,1) .08s both;
+    }
+    @keyframes sbIn { from{opacity:0;transform:translateX(-24px);}to{opacity:1;transform:translateX(0);} }
+    .sidebar::-webkit-scrollbar{width:3px;}
+    .sidebar::-webkit-scrollbar-thumb{background:rgba(139,168,136,.28);border-radius:3px;}
+
+    .sb-block { padding:1.15rem; border-bottom:1px solid rgba(139,168,136,.18); }
+    .sb-head {
+      font-family:'DM Mono',monospace; font-size:.6rem; color:var(--text-light);
+      letter-spacing:.13em; text-transform:uppercase; margin-bottom:.8rem;
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .sb-head::after { content:''; flex:1; height:1px; background:rgba(139,168,136,.22); }
+
+    .qchip {
+      display:flex; align-items:center; gap:.45rem;
+      width:100%; text-align:left; padding:.55rem .7rem;
+      background:transparent; border:1px solid rgba(139,168,136,.2);
+      border-radius:7px; font-size:.75rem; color:var(--text);
+      cursor:pointer; font-family:'DM Sans',sans-serif;
+      margin-bottom:.38rem; transition:all .22s cubic-bezier(.22,1,.36,1);
+      position:relative; overflow:hidden;
+    }
+    .qchip:last-child { margin-bottom:0; }
+    .qi { font-size:.8rem; flex-shrink:0; }
+    .qt { flex:1; }
+    .qa { font-size:.65rem; color:var(--sage); opacity:0; transform:translateX(-8px); transition:all .22s; }
+    .qchip:hover { background:var(--green); color:var(--ivory); border-color:var(--green); transform:translateX(3px); }
+    .qchip:hover .qa { opacity:1; transform:translateX(0); }
+
+    .sb-tip { font-size:.75rem; color:var(--text-light); line-height:1.65; font-weight:300; }
+
+    .sb-footer { padding:1rem 1.15rem; margin-top:auto; }
+    .sess-pill {
+      display:flex; align-items:center; gap:.5rem;
+      padding:.55rem .75rem; background:var(--ivory);
+      border:1px solid rgba(139,168,136,.25); border-radius:7px;
+    }
+    .sess-dot {
+      width:6px; height:6px; border-radius:50%; background:#4ade80;
+      animation:sessPulse 2s ease-in-out infinite;
+    }
+    @keyframes sessPulse {
+      0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,.5); }
+      50%      { box-shadow:0 0 0 4px rgba(74,222,128,0); }
+    }
+    .sess-txt { font-size:.68rem; color:var(--text-light); font-family:'DM Mono',monospace; }
+
+    /* ── Chat area ── */
+    .chat-col { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+
+    /* Messages scroll */
+    .msgs { flex:1; overflow-y:auto; overflow-x:hidden; padding:1.5rem 2rem; scroll-behavior:smooth; }
+    .msgs::-webkit-scrollbar { width:4px; }
+    .msgs::-webkit-scrollbar-thumb { background:rgba(139,168,136,.32); border-radius:4px; }
+    .msgs { scrollbar-width:thin; scrollbar-color:rgba(139,168,136,.32) transparent; }
+
+    /* Date chip */
+    .date-chip {
+      display:flex; align-items:center; gap:.65rem;
+      margin:.5rem 0 1.25rem; font-family:'DM Mono',monospace; font-size:.6rem; color:var(--text-light); letter-spacing:.08em;
+    }
+    .date-chip::before,.date-chip::after { content:''; flex:1; height:1px; background:rgba(139,168,136,.22); }
+
+    /* Messages */
+    .msg { display:flex; flex-direction:column; margin-bottom:1.1rem; animation:msgIn .35s cubic-bezier(.22,1,.36,1) both; }
+    .msg:nth-child(1){animation-delay:.06s;}.msg:nth-child(2){animation-delay:.12s;}.msg:nth-child(3){animation-delay:.18s;}.msg:nth-child(4){animation-delay:.24s;}.msg:nth-child(5){animation-delay:.3s;}.msg:nth-child(n+6){animation-delay:.34s;}
+    @keyframes msgIn { from{opacity:0;transform:translateY(10px) scale(.99);}to{opacity:1;transform:translateY(0) scale(1);} }
+    .msg.user { align-items:flex-end; }
+    .msg.assistant { align-items:flex-start; }
+
+    .mrow { display:flex; align-items:flex-end; gap:.55rem; }
+    .msg.user .mrow { flex-direction:row-reverse; }
+
+    .av {
+      width:26px; height:26px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.7rem; flex-shrink:0; margin-bottom:2px;
+      transition:transform .25s;
+    }
+    .msg:hover .av { transform:scale(1.12); }
+    .av-u { background:var(--green); }
+    .av-b { background:var(--ivory-dark); border:1px solid rgba(139,168,136,.3); }
+
+    .bubble {
+      max-width:70%; padding:.85rem 1.1rem; border-radius:14px;
+      font-size:.88rem; line-height:1.72; white-space:pre-wrap; word-wrap:break-word;
+      transition:transform .2s, box-shadow .2s;
+    }
+    .msg:hover .bubble { transform:translateY(-1px); }
+    .bu { background:var(--green); color:var(--ivory); border-bottom-right-radius:3px; box-shadow:0 2px 8px rgba(45,80,22,.2); }
+    .msg:hover .bu { box-shadow:0 5px 18px rgba(45,80,22,.28); }
+    .bb { background:var(--white); color:var(--text); border:1px solid rgba(139,168,136,.28); border-bottom-left-radius:3px; box-shadow:0 2px 6px rgba(45,80,22,.05); }
+    .msg:hover .bb { box-shadow:0 4px 14px rgba(45,80,22,.09); }
+    .be { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; border-bottom-left-radius:3px; }
+
+    .mmeta { display:flex; align-items:center; gap:.35rem; margin-top:.3rem; padding:0 .25rem; }
+    .msg.user .mmeta { justify-content:flex-end; }
+    .mtime { font-family:'DM Mono',monospace; font-size:.58rem; color:var(--text-light); }
+    .mcheck { font-size:.5rem; color:var(--sage); font-family:'DM Mono',monospace; }
+
+    /* Typing */
+    .typing { display:none; margin-bottom:1.1rem; align-items:flex-end; gap:.55rem; animation:msgIn .3s ease both; }
+    .typing.on { display:flex; }
+    .tbub { background:var(--white); border:1px solid rgba(139,168,136,.28); border-radius:14px; border-bottom-left-radius:3px; padding:.75rem 1rem; display:flex; gap:4px; align-items:center; box-shadow:0 2px 6px rgba(45,80,22,.05); }
+    .td { width:4px; height:4px; border-radius:50%; background:var(--sage); animation:tdB 1.4s ease infinite; }
+    .td:nth-child(2){animation-delay:.18s;}.td:nth-child(3){animation-delay:.36s;}
+    @keyframes tdB{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+    /* ── Empty state ── */
+    .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:2rem; text-align:center; }
+    .orbit { position:relative; width:88px; height:88px; margin-bottom:1.5rem; }
+    .oring { position:absolute; border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); }
+    .or1 { width:88px; height:88px; border:1.5px solid rgba(139,168,136,.3); animation:ospin 10s linear infinite; }
+    .or1::after { content:''; position:absolute; top:-3px; left:50%; width:6px; height:6px; background:var(--sage); border-radius:50%; transform:translateX(-50%); }
+    .or2 { width:58px; height:58px; border:1px dashed rgba(139,168,136,.18); animation:ospin 7s linear reverse infinite; }
+    .ocenter { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.65rem; animation:opulse 3.5s ease-in-out infinite; }
+    @keyframes ospin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+    @keyframes opulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);}}
+    .etitle { font-family:'Cormorant Garamond',serif; font-size:1.65rem; font-weight:400; color:var(--green); letter-spacing:-.01em; margin-bottom:.4rem; }
+    .esub { font-size:.82rem; color:var(--text-light); line-height:1.65; font-weight:300; margin-bottom:1.5rem; }
+    .echips { display:flex; flex-wrap:wrap; gap:.45rem; justify-content:center; max-width:440px; }
+    .echip {
+      padding:.45rem .9rem; background:var(--white); border:1px solid rgba(139,168,136,.28);
+      border-radius:100px; font-size:.75rem; color:var(--text); cursor:pointer;
+      transition:all .22s; font-family:'DM Sans',sans-serif; white-space:nowrap;
+    }
+    .echip:hover { background:var(--green); color:var(--ivory); border-color:var(--green); transform:translateY(-2px); }
+
+    /* ── Input bar ── */
+    .input-bar {
+      flex-shrink:0; border-top:1px solid rgba(139,168,136,.28);
+      background:var(--white); padding:.8rem 1.4rem .9rem;
+      animation:ibIn .5s cubic-bezier(.22,1,.36,1) .15s both;
+    }
+    @keyframes ibIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .irow { display:flex; align-items:center; gap:.6rem; }
+    .minput {
+      flex:1; background:var(--ivory); border:1.5px solid rgba(139,168,136,.28);
+      border-radius:10px; padding:.76rem 1rem; font-size:.9rem;
+      font-family:'DM Sans',sans-serif; color:var(--text);
+      outline:none; transition:border-color .25s, box-shadow .25s, background .25s; resize:none;
+    }
+    .minput:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(45,80,22,.1); background:var(--white); }
+    .minput::placeholder { color:rgba(90,107,82,.38); }
+    .sbtn {
+      width:40px; height:40px; background:var(--green); border:none; border-radius:9px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:background .2s, transform .2s, box-shadow .2s; flex-shrink:0; overflow:hidden; position:relative;
+    }
+    .sbtn::before { content:''; position:absolute; inset:0; background:radial-gradient(circle,rgba(255,255,255,.2) 0%,transparent 70%); opacity:0; transition:opacity .3s; }
+    .sbtn:hover { background:var(--green-light); transform:scale(1.08); box-shadow:0 4px 14px rgba(45,80,22,.32); }
+    .sbtn:hover::before { opacity:1; }
+    .sbtn:active { transform:scale(.94); }
+    .sbtn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    .sico { width:15px; height:15px; fill:none; stroke:var(--ivory); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s; }
+    .sbtn:hover .sico { transform:translate(2px,-2px); }
+    .ifoot { display:flex; justify-content:space-between; align-items:center; margin-top:.42rem; padding:0 .15rem; }
+    .ihint,.icount { font-size:.62rem; color:rgba(90,107,82,.42); font-family:'DM Mono',monospace; }
+
+    @media(max-width:760px) {
+      .sidebar{display:none;}
+      .msgs{padding:1rem;}
+      .input-bar{padding:.7rem 1rem .8rem;}
+      .bubble{max-width:85%;}
+      .top-id,.top-sep{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <nav class="topbar">
+    <div class="tl">
+      <div class="logo-box">💭</div>
+      <span class="top-title">Conversation</span>
+      <% if (chatId && chatId !== '') { %>
+        <div class="top-sep"></div>
+        <span class="top-id">#<%= chatId.substring(0, 8) %></span>
+      <% } %>
+    </div>
+    <div class="tr">
+      <a href="/chat" class="btn btn-p">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New
+      </a>
+      <a href="/history" class="btn btn-g">History</a>
+      <form action="/logout" method="POST" style="display:inline">
+        <button type="submit" class="btn btn-g">Logout</button>
+      </form>
+    </div>
+  </nav>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sb-block">
+        <p class="sb-head">Quick Start</p>
+        <button class="qchip" onclick="fillMsg('I need help deciding on a career change')"><span class="qi">💼</span><span class="qt">Career path advice</span><span class="qa">→</span></button>
+        <button class="qchip" onclick="fillMsg('Should I buy or rent a house?')"><span class="qi">🏠</span><span class="qt">Housing decision</span><span class="qa">→</span></button>
+        <button class="qchip" onclick="fillMsg('Help me choose the right college major')"><span class="qi">🎓</span><span class="qt">Education choice</span><span class="qa">→</span></button>
+        <button class="qchip" onclick="fillMsg('I am thinking about starting a business')"><span class="qi">🚀</span><span class="qt">Starting a business</span><span class="qa">→</span></button>
+      </div>
+      <div class="sb-block">
+        <p class="sb-head">How It Works</p>
+        <p class="sb-tip">Share what's weighing on you. Your AI companion will listen, ask the right questions, and help you find your own clarity.</p>
+      </div>
+      <div class="sb-footer">
+        <div class="sess-pill">
+          <div class="sess-dot"></div>
+          <span class="sess-txt">Session active</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CHAT -->
+    <div class="chat-col">
+
+      <div class="msgs" id="msgsScroll">
+
+        <% if (messages && messages.length > 0) { %>
+          <div class="date-chip">Today</div>
+          <% messages.forEach(function(msg) { %>
+            <div class="msg <%= msg.role %> <%= msg.isError ? 'error' : '' %>">
+              <div class="mrow">
+                <div class="av <%= msg.role === 'user' ? 'av-u' : 'av-b' %>"><%= msg.role === 'user' ? '👤' : '🌿' %></div>
+                <div class="bubble <%= msg.isError ? 'be' : (msg.role === 'user' ? 'bu' : 'bb') %>"><%= msg.text %></div>
+              </div>
+              <div class="mmeta">
+                <span class="mtime"><%= msg.timestamp || '' %></span>
+                <% if (msg.role === 'user') { %><span class="mcheck">✓✓</span><% } %>
+              </div>
+            </div>
+          <% }); %>
+
+        <% } else { %>
+          <div class="empty">
+            <div class="orbit">
+              <div class="oring or1"></div>
+              <div class="oring or2"></div>
+              <div class="ocenter">🧭</div>
+            </div>
+            <h2 class="etitle">Begin Your Journey</h2>
+            <p class="esub">Share what's on your mind.<br>I'm here to help you find clarity.</p>
+            <div class="echips">
+              <button class="echip" onclick="fillMsg('I need help deciding on a career change')">💼 Career change</button>
+              <button class="echip" onclick="fillMsg('Should I buy or rent a house?')">🏠 Buy or rent?</button>
+              <button class="echip" onclick="fillMsg('Help me choose the right college major')">🎓 College major</button>
+              <button class="echip" onclick="fillMsg('I am thinking about starting a business')">🚀 Start a business</button>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Typing indicator -->
+        <div class="typing" id="typing">
+          <div class="av av-b">🌿</div>
+          <div class="tbub">
+            <div class="td"></div><div class="td"></div><div class="td"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- INPUT BAR -->
+      <div class="input-bar">
+        <form id="chatForm" method="POST" action="/chat">
+          <input type="hidden" name="chatId" value="<%= chatId || '' %>">
+          <input type="hidden" name="messages" value='<%- JSON.stringify(messages || []) %>'>
+          <div class="irow">
+            <input type="text" name="message" id="mi" class="minput" placeholder="Share your thoughts…" required autocomplete="off" maxlength="1000">
+            <button type="submit" class="sbtn" id="sbtn">
+              <svg class="sico" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="ifoot">
+            <span class="ihint">Press Enter to send</span>
+            <span class="icount" id="icount">0 / 1000</span>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const S = document.getElementById('msgsScroll');
+    const F = document.getElementById('chatForm');
+    const I = document.getElementById('mi');
+    const B = document.getElementById('sbtn');
+    const C = document.getElementById('icount');
+    const T = document.getElementById('typing');
+
+    // Scroll to bottom
+    S.scrollTop = S.scrollHeight;
+
+    // Char count with color warning
+    I.addEventListener('input', () => {
+      const n = I.value.length;
+      C.textContent = `${n} / 1000`;
+      C.style.color = n > 900 ? '#DC2626' : '';
+    });
+
+    // Enter submit
+    I.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (I.value.trim()) F.dispatchEvent(new Event('submit', {cancelable: true}));
+      }
+    });
+
+    // Form submit - optimistic UI
+    F.addEventListener('submit', e => {
+      const txt = I.value.trim();
+      if (!txt) { e.preventDefault(); return; }
+      B.disabled = true;
+
+      // Remove empty state
+      const em = S.querySelector('.empty');
+      if (em) em.remove();
+
+      // Add date divider if first
+      if (!S.querySelector('.date-chip')) {
+        const dc = document.createElement('div');
+        dc.className = 'date-chip';
+        dc.textContent = 'Today';
+        S.insertBefore(dc, T);
+      }
+
+      // Add user bubble
+      const el = document.createElement('div');
+      el.className = 'msg user';
+      el.innerHTML = `
+        <div class="mrow">
+          <div class="av av-u">👤</div>
+          <div class="bubble bu">${esc(txt)}</div>
+        </div>
+        <div class="mmeta" style="justify-content:flex-end">
+          <span class="mtime">${now()}</span>
+          <span class="mcheck">✓</span>
+        </div>`;
+      S.insertBefore(el, T);
+      T.classList.add('on');
+      S.scrollTop = S.scrollHeight;
+    });
+
+    function fillMsg(t) {
+      I.value = t; I.focus();
+      C.textContent = `${t.length} / 1000`;
+      I.style.borderColor = 'var(--green)';
+      setTimeout(() => I.style.borderColor = '', 700);
+    }
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function now() { return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); }
+
+    I.focus();
+  </script>
+</body>
+</html>
