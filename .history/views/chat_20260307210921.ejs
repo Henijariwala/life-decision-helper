@@ -1,0 +1,501 @@
+//chat.ejs->views
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Life Decision Helper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ivory: #FFFFF0;
+      --ivory-dark: #F5F5DC;
+      --green: #2D5016;
+      --green-light: #3D6B23;
+      --green-soft: #4A7C2F;
+      --sage: #8BA888;
+      --white: #FFFFFF;
+      --text: #1A2E0F;
+      --text-light: #5A6B52;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Work Sans', sans-serif;
+      background: var(--ivory);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--sage);
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--green);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-family: 'Work Sans', sans-serif;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--green);
+      border: 1.5px solid var(--sage);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ivory);
+      border-color: var(--green);
+    }
+
+    .btn-new-chat {
+      background: var(--green);
+      color: var(--white);
+      border: none;
+    }
+
+    .btn-new-chat:hover {
+      background: var(--green-light);
+      transform: translateY(-1px);
+    }
+
+    .chat-container {
+      flex: 1;
+      max-width: 1000px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages-wrapper {
+      flex: 1;
+      background: var(--white);
+      border-radius: 2px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+      border: 1px solid var(--sage);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .messages-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2.5rem 2rem;
+      min-height: 450px;
+      max-height: 600px;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: var(--ivory);
+      border-radius: 5px;
+      margin: 0.5rem 0;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: var(--sage);
+      border-radius: 5px;
+      border: 2px solid var(--ivory);
+    }
+
+    .messages::-webkit-scrollbar-thumb:hover {
+      background: var(--green-soft);
+    }
+
+    /* For Firefox */
+    .messages {
+      scrollbar-width: thin;
+      scrollbar-color: var(--sage) var(--ivory);
+    }
+
+    .message {
+      margin-bottom: 2rem;
+      animation: fadeIn 0.4s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-content {
+      padding: 1.2rem 1.5rem;
+      border-radius: 2px;
+      max-width: 75%;
+      position: relative;
+    }
+
+    .message.user {
+      align-items: flex-end;
+    }
+
+    .message.user .message-content {
+      background: var(--green);
+      color: var(--white);
+      border: 1px solid var(--green-light);
+    }
+
+    .message.assistant {
+      align-items: flex-start;
+    }
+
+    .message.assistant .message-content {
+      background: var(--ivory);
+      color: var(--text);
+      border: 1px solid var(--sage);
+    }
+
+    .message.error .message-content {
+      background: #FEF2F2;
+      color: #991B1B;
+      border-left: 3px solid #DC2626;
+    }
+
+    .message-text {
+      line-height: 1.7;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    .message.user .message-meta {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .message-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 5rem 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .empty-state h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+      color: var(--text-light);
+      margin-bottom: 2.5rem;
+    }
+
+    .empty-state-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .suggestion-chip {
+      background: var(--white);
+      padding: 0.7rem 1.3rem;
+      border-radius: 2px;
+      font-size: 0.85rem;
+      color: var(--green);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1.5px solid var(--sage);
+    }
+
+    .suggestion-chip:hover {
+      background: var(--green);
+      color: var(--white);
+      border-color: var(--green);
+      transform: translateY(-2px);
+    }
+
+    .input-container {
+      background: var(--white);
+      padding: 1.5rem;
+      border-radius: 2px;
+      border: 1px solid var(--sage);
+      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+    }
+
+    .input-form {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 1rem 1.2rem;
+      border: 1.5px solid var(--sage);
+      border-radius: 2px;
+      font-size: 0.95rem;
+      font-family: 'Work Sans', sans-serif;
+      transition: all 0.3s;
+      background: var(--ivory);
+      color: var(--text);
+    }
+
+    .message-input:focus {
+      outline: none;
+      border-color: var(--green);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+    }
+
+    .message-input::placeholder {
+      color: var(--text-light);
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: var(--white);
+      padding: 1rem 2rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 1rem 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 1.2rem;
+      }
+
+      .message-content {
+        max-width: 85%;
+      }
+
+      .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">💭</span>
+      <h1>Conversation</h1>
+    </div>
+    <div class="header-actions">
+      <a href="/chat" class="btn btn-new-chat">
+        <span>+</span> New
+      </a>
+      <a href="/history" class="btn btn-secondary">
+        <span>📚</span> History
+      </a>
+      <form action="/logout" method="POST" style="display: inline;">
+        <button type="submit" class="btn btn-secondary">
+          Logout
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <div class="messages-wrapper">
+      <div class="messages" id="messagesContainer">
+        <% if (messages && messages.length > 0) { %>
+          <% messages.forEach(function(msg) { %>
+            <div class="message <%= msg.role %> <%= msg.isError ? 'error' : '' %>">
+              <div class="message-content">
+                <div class="message-text"><%= msg.text %></div>
+                <div class="message-meta">
+                  <div class="message-avatar">
+                    <%= msg.role === 'user' ? '👤' : '🤖' %>
+                  </div>
+                  <span class="message-time"><%= msg.timestamp || '' %></span>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="empty-state">
+            <div class="empty-state-icon">🌿</div>
+            <h2>Begin Your Journey</h2>
+            <p>Share your thoughts, and I'll help you find clarity</p>
+            <div class="empty-state-suggestions">
+              <div class="suggestion-chip" onclick="fillMessage('I need help deciding on a career change')">
+                💼 Career Path
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('Should I buy or rent a house?')">
+                🏠 Housing Decision
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('Help me choose the right college major')">
+                🎓 Education
+              </div>
+              <div class="suggestion-chip" onclick="fillMessage('I am thinking about starting a business')">
+                🚀 Business
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="input-container">
+      <form class="input-form" method="POST" action="/chat" id="chatForm">
+        <input type="hidden" name="chatId" value="<%= chatId || '' %>">
+        <input type="hidden" name="messages" value='<%- JSON.stringify(messages || []) %>'>
+        
+        <input 
+          type="text" 
+          name="message" 
+          id="messageInput"
+          class="message-input" 
+          placeholder="Share your thoughts..." 
+          required
+          autocomplete="off"
+        >
+        
+        <button type="submit" class="btn btn-primary" id="sendButton">
+          Send
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const messagesContainer = document.getElementById('messagesContainer');
+    const form = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    function fillMessage(text) {
+      messageInput.value = text;
+      messageInput.focus();
+    }
+
+    form.addEventListener('submit', function(e) {
+      const message = messageInput.value.trim();
+      if (!message) {
+        e.preventDefault();
+        return false;
+      }
+      sendButton.disabled = true;
+      sendButton.innerHTML = 'Sending...';
+    });
+
+    messageInput.focus();
+  </script>
+</body>
+</html>
