@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>History - Life Decision Helper</title>
+  <title>History — Life Decision Helper</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
   <style>
     :root {
       --ivory: #FFFFF0;
@@ -15,379 +15,526 @@
       --green-light: #3D6B23;
       --green-soft: #4A7C2F;
       --sage: #8BA888;
+      --sage-light: rgba(139, 168, 136, 0.18);
       --white: #FFFFFF;
       --text: #1A2E0F;
       --text-light: #5A6B52;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Work Sans', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       background: var(--ivory);
       min-height: 100vh;
     }
 
-    .header {
+    /* ══ TOPBAR ══ */
+    .topbar {
       background: var(--white);
-      border-bottom: 1px solid var(--sage);
-      padding: 1.2rem 2rem;
+      border-bottom: 1px solid rgba(139,168,136,0.3);
+      padding: 0 2rem;
+      height: 60px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 12px rgba(45,80,22,0.04);
     }
 
-    .header-left {
+    .topbar-left {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .logo {
-      font-size: 1.8rem;
+    .topbar-logo {
+      width: 34px; height: 34px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
     }
 
-    .header h1 {
+    .topbar-title {
       font-family: 'Cormorant Garamond', serif;
-      color: var(--green);
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 600;
+      color: var(--green);
       letter-spacing: -0.01em;
     }
 
-    .header-actions {
+    .topbar-actions {
       display: flex;
-      gap: 0.75rem;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .btn {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      border-radius: 2px;
-      cursor: pointer;
-      font-size: 0.85rem;
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
       font-weight: 500;
-      transition: all 0.3s;
+      cursor: pointer;
+      transition: all 0.2s;
       text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.02em;
+      border: none;
+    }
+    .nav-btn-ghost {
+      background: transparent;
+      color: var(--text-light);
+      border: 1px solid transparent;
+    }
+    .nav-btn-ghost:hover {
+      background: var(--ivory);
+      color: var(--green);
+      border-color: rgba(139,168,136,0.4);
+    }
+    .nav-btn-primary {
+      background: var(--green);
+      color: var(--ivory);
+    }
+    .nav-btn-primary:hover { background: var(--green-light); }
+
+    /* ══ PAGE HERO ══ */
+    .hero {
+      background: var(--green);
+      position: relative;
+      overflow: hidden;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(139,168,136,0.2) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(255,255,240,0.05) 0%, transparent 60%);
+    }
+
+    /* Large decorative ring */
+    .hero-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(139,168,136,0.15);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .hero-ring-1 { width: 300px; height: 300px; }
+    .hero-ring-2 { width: 500px; height: 500px; border-color: rgba(139,168,136,0.08); }
+    .hero-ring-3 { width: 700px; height: 700px; border-color: rgba(139,168,136,0.05); }
+
+    .hero-content { position: relative; z-index: 2; }
+
+    .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      letter-spacing: 0.03em;
+      padding: 0.4rem 1rem;
+      background: rgba(255,255,240,0.08);
+      border: 1px solid rgba(139,168,136,0.3);
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+    .hero-badge span {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--sage);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      font-family: 'Work Sans', sans-serif;
     }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--green);
-      border: 1.5px solid var(--sage);
-    }
-
-    .btn-secondary:hover {
-      background: var(--ivory);
-      border-color: var(--green);
-    }
-
-    .btn-new-chat {
-      background: var(--green);
-      color: var(--white);
-      border: none;
-    }
-
-    .btn-new-chat:hover {
-      background: var(--green-light);
-      transform: translateY(-1px);
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem;
-    }
-
-    .page-header {
-      text-align: center;
-      margin-bottom: 4rem;
-    }
-
-    .page-title {
+    .hero-title {
       font-family: 'Cormorant Garamond', serif;
-      color: var(--green);
-      font-size: 3rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 300;
+      color: var(--ivory);
       letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
     }
+    .hero-title em { font-style: italic; color: var(--sage); }
 
-    .page-subtitle {
-      color: var(--text-light);
-      font-size: 1.05rem;
+    .hero-sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,240,0.45);
       font-weight: 300;
       letter-spacing: 0.03em;
     }
 
-    .history-grid {
+    /* ══ MAIN CONTENT ══ */
+    .main {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    /* Stats row */
+    .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid rgba(139,168,136,0.3);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
+    }
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 400;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Section header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--green);
+      letter-spacing: -0.01em;
+    }
+    .section-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Cards grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
     }
 
     .chat-card {
       background: var(--white);
-      border-radius: 2px;
-      padding: 1.8rem;
-      border: 1px solid var(--sage);
-      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
-      transition: all 0.3s ease;
+      border: 1px solid rgba(139,168,136,0.3);
+      border-radius: 10px;
+      padding: 0;
       cursor: pointer;
-      position: relative;
+      transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s, border-color 0.25s;
       overflow: hidden;
+      position: relative;
+      animation: cardIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
     }
+    .chat-card:nth-child(1) { animation-delay: 0.05s; }
+    .chat-card:nth-child(2) { animation-delay: 0.1s; }
+    .chat-card:nth-child(3) { animation-delay: 0.15s; }
+    .chat-card:nth-child(4) { animation-delay: 0.2s; }
+    .chat-card:nth-child(5) { animation-delay: 0.25s; }
+    .chat-card:nth-child(6) { animation-delay: 0.3s; }
 
-    .chat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--sage), var(--green), var(--sage));
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .chat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(45, 80, 22, 0.12);
-      border-color: var(--green-soft);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(45,80,22,0.12);
+      border-color: var(--sage);
     }
 
-    .chat-header {
+    /* Card color strip */
+    .card-strip {
+      height: 3px;
+      background: linear-gradient(90deg, var(--sage), var(--green));
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .card-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
     }
 
-    .chat-icon {
-      font-size: 2rem;
-    }
-
-    .chat-date {
+    .card-icon {
+      width: 40px; height: 40px;
+      background: var(--ivory);
+      border: 1px solid rgba(139,168,136,0.3);
+      border-radius: 10px;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      font-size: 0.75rem;
-      color: var(--text-light);
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
     }
 
-    .chat-date-day {
-      font-weight: 600;
+    .card-date {
+      text-align: right;
+    }
+    .card-date-main {
+      font-size: 0.8rem;
+      font-weight: 500;
       color: var(--green);
-      font-size: 0.85rem;
-      letter-spacing: 0.02em;
+      display: block;
+    }
+    .card-date-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-light);
+      display: block;
+      margin-top: 0.15rem;
     }
 
-    .chat-date-time {
-      margin-top: 0.25rem;
-    }
-
-    .chat-preview {
+    .card-preview {
+      font-size: 0.875rem;
       color: var(--text);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      margin-bottom: 1.2rem;
+      line-height: 1.65;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
-      min-height: 4.5em;
+      min-height: 4.3em;
+      font-weight: 300;
     }
 
-    .chat-meta {
+    .card-footer {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
+      margin-top: 1.2rem;
       padding-top: 1rem;
-      border-top: 1px solid var(--sage);
+      border-top: 1px solid rgba(139,168,136,0.2);
     }
 
-    .chat-message-count {
+    .card-meta {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
+      gap: 0.4rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
       color: var(--text-light);
     }
-
-    .chat-actions {
-      display: flex;
-      gap: 0.5rem;
+    .meta-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--sage);
     }
 
-    .btn-icon {
+    .card-actions {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .card-action-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(139,168,136,0.3);
       background: transparent;
-      border: none;
       cursor: pointer;
-      font-size: 1.1rem;
-      padding: 0.4rem;
-      border-radius: 2px;
-      transition: all 0.3s;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.2s;
       color: var(--text-light);
     }
-
-    .btn-icon:hover {
+    .card-action-btn:hover {
       background: var(--ivory);
-      color: var(--green);
+      border-color: var(--sage);
     }
-
-    .btn-delete:hover {
+    .card-action-btn.delete:hover {
       background: #FEF2F2;
-      color: #DC2626;
+      border-color: #FECACA;
     }
 
+    /* ── Empty state ── */
     .empty-state {
+      grid-column: 1 / -1;
       text-align: center;
       padding: 5rem 2rem;
       background: var(--white);
-      border-radius: 2px;
-      border: 1px solid var(--sage);
-      box-shadow: 0 1px 3px rgba(45, 80, 22, 0.05);
+      border: 1px solid rgba(139,168,136,0.3);
+      border-radius: 10px;
     }
-
-    .empty-state-icon {
-      font-size: 4rem;
+    .empty-icon {
+      font-size: 3.5rem;
       margin-bottom: 1.5rem;
+      display: block;
     }
-
-    .empty-state h2 {
+    .empty-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: 2rem;
+      font-weight: 400;
       color: var(--green);
-      margin-bottom: 0.75rem;
-      font-weight: 600;
+      margin-bottom: 0.5rem;
     }
-
-    .empty-state p {
-      font-size: 1rem;
+    .empty-sub {
+      font-size: 0.88rem;
       color: var(--text-light);
       margin-bottom: 2rem;
+      font-weight: 300;
     }
 
     @media (max-width: 768px) {
-      .history-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .page-title {
-        font-size: 2.5rem;
-      }
-
-      .header {
-        padding: 1rem 1.5rem;
-      }
-
-      .header h1 {
-        font-size: 1.2rem;
-      }
-
-      .btn {
-        font-size: 0.8rem;
-        padding: 0.5rem 1rem;
-      }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 1rem; }
+      .hero { padding: 3rem 1.5rem; }
+      .main { padding: 2rem 1.25rem; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-left">
-      <span class="logo">📚</span>
-      <h1>Your History</h1>
+
+  <!-- TOPBAR -->
+  <nav class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">📚</div>
+      <span class="topbar-title">History</span>
     </div>
-    <div class="header-actions">
-      <a href="/chat" class="btn btn-new-chat">
-        <span>+</span> New Chat
+    <div class="topbar-actions">
+      <a href="/chat" class="nav-btn nav-btn-primary">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Chat
       </a>
-      <form action="/logout" method="POST" style="display: inline;">
-        <button type="submit" class="btn btn-secondary">
-          Logout
-        </button>
+      <form action="/logout" method="POST" style="display:inline">
+        <button type="submit" class="nav-btn nav-btn-ghost">Logout</button>
       </form>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-ring hero-ring-1"></div>
+    <div class="hero-ring hero-ring-2"></div>
+    <div class="hero-ring hero-ring-3"></div>
+    <div class="hero-content">
+      <div class="hero-badge"><span>Your Journey</span></div>
+      <h1 class="hero-title">Past <em>Conversations</em></h1>
+      <p class="hero-sub">Revisit the moments that shaped your decisions</p>
     </div>
   </div>
 
-  <div class="container">
-    <div class="page-header">
-      <h1 class="page-title">Past Conversations</h1>
-      <p class="page-subtitle">Review your journey to clarity</p>
-    </div>
+  <!-- MAIN -->
+  <div class="main">
 
     <% if (decisions && decisions.length > 0) { %>
-      <div class="history-grid">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value"><%= decisions.length %></div>
+          <div class="stat-label">Conversations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"><%= decisions.reduce((a, d) => a + ((d.messages && d.messages.length) || 0), 0) %></div>
+          <div class="stat-label">Total Messages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value"><%= Math.round(decisions.reduce((a, d) => a + ((d.messages && d.messages.length) || 0), 0) / Math.max(decisions.length,1)) %></div>
+          <div class="stat-label">Avg per Chat</div>
+        </div>
+      </div>
+
+      <!-- Section header -->
+      <div class="section-header">
+        <h2 class="section-title">All Conversations</h2>
+        <span class="section-count"><%= decisions.length %> TOTAL</span>
+      </div>
+
+      <!-- Cards -->
+      <div class="cards-grid">
         <% decisions.forEach(function(decision) { %>
           <div class="chat-card" onclick="openChat('<%= decision.id %>')">
-            <div class="chat-header">
-              <div class="chat-icon">🌿</div>
-              <div class="chat-date">
-                <% if (decision.createdAt) { %>
-                  <div class="chat-date-day">
-                    <%= new Date(decision.createdAt).toLocaleDateString('en-IN', { 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric',
-                      timeZone: 'Asia/Kolkata'
-                    }) %>
-                  </div>
-                  <div class="chat-date-time">
-                    <%= new Date(decision.createdAt).toLocaleTimeString('en-IN', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: true,
-                      timeZone: 'Asia/Kolkata'
-                    }) %>
-                  </div>
-                <% } else { %>
-                  <div class="chat-date-day">Recent</div>
-                <% } %>
+            <div class="card-strip"></div>
+            <div class="card-body">
+              <div class="card-header">
+                <div class="card-icon">🌿</div>
+                <div class="card-date">
+                  <% if (decision.createdAt) { %>
+                    <span class="card-date-main">
+                      <%= new Date(decision.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Kolkata' }) %>
+                    </span>
+                    <span class="card-date-time">
+                      <%= new Date(decision.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) %>
+                    </span>
+                  <% } else { %>
+                    <span class="card-date-main">Recent</span>
+                  <% } %>
+                </div>
               </div>
-            </div>
-            
-            <div class="chat-preview">
-              <%= decision.preview || 'No preview available' %>
-            </div>
-            
-            <div class="chat-meta">
-              <div class="chat-message-count">
-                <span>💬</span>
-                <span><%= (decision.messages && decision.messages.length) || 0 %> messages</span>
-              </div>
-              
-              <div class="chat-actions" onclick="event.stopPropagation()">
-                <button class="btn-icon btn-delete" onclick="deleteChat('<%= decision.id %>')" title="Delete">
-                  🗑️
-                </button>
+
+              <p class="card-preview">
+                <%= decision.preview || 'No preview available' %>
+              </p>
+
+              <div class="card-footer">
+                <div class="card-meta">
+                  <div class="meta-dot"></div>
+                  <span><%= (decision.messages && decision.messages.length) || 0 %> messages</span>
+                </div>
+                <div class="card-actions" onclick="event.stopPropagation()">
+                  <button class="card-action-btn" onclick="openChat('<%= decision.id %>')" title="Open">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </button>
+                  <button class="card-action-btn delete" onclick="deleteChat('<%= decision.id %>')" title="Delete">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         <% }); %>
       </div>
+
     <% } else { %>
-      <div class="empty-state">
-        <div class="empty-state-icon">🌿</div>
-        <h2>No Conversations Yet</h2>
-        <p>Your journey begins with a single question</p>
-        <a href="/chat" class="btn btn-new-chat">
-          <span>+</span> Start Your First Chat
-        </a>
+      <div class="cards-grid">
+        <div class="empty-state">
+          <span class="empty-icon">🌿</span>
+          <h2 class="empty-title">No Conversations Yet</h2>
+          <p class="empty-sub">Your journey begins with a single question</p>
+          <a href="/chat" class="nav-btn nav-btn-primary" style="display:inline-flex; padding: 0.7rem 1.5rem; font-size: 0.85rem;">
+            Start Your First Chat
+          </a>
+        </div>
       </div>
     <% } %>
+
   </div>
 
   <script>
@@ -396,28 +543,14 @@
     }
 
     async function deleteChat(chatId) {
-      if (!confirm('Are you sure you want to delete this conversation?')) {
-        return;
-      }
-
+      if (!confirm('Delete this conversation?')) return;
       try {
-        const response = await fetch(`/chat/${chatId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          window.location.reload();
-        } else {
-          alert('Failed to delete conversation');
-        }
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Failed to delete conversation. Please try again.');
+        const res = await fetch(`/chat/${chatId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (data.success) window.location.reload();
+        else alert('Failed to delete conversation');
+      } catch (e) {
+        alert('Failed to delete. Please try again.');
       }
     }
   </script>
