@@ -1,4 +1,4 @@
-//routes/user.js
+// routes/user.js
 const express = require("express");
 const router = express.Router();
 const requireAuth = require("../middleware/auth");
@@ -358,6 +358,116 @@ router.delete("/chat/:chatId", requireAuth, async (req, res) => {
 router.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.redirect("/");
+});
+
+// ─────────────────────────────────────────────
+//  PROFILE
+// ─────────────────────────────────────────────
+
+// GET /profile
+router.get("/profile", requireAuth, async (req, res) => {
+  try {
+    const db = admin.firestore();
+    const userEmail = sanitizeEmail(req.user.email);
+
+    const profileSnap = await db
+      .collection("users")
+      .doc(userEmail)
+      .collection("profile")
+      .doc("data")
+      .get();
+
+    const profile = profileSnap.exists ? profileSnap.data() : {};
+
+    const chatsSnap = await db
+      .collection("users")
+      .doc(userEmail)
+      .collection("chats")
+      .get();
+
+    const totalChats = chatsSnap.size;
+    const totalMessages = chatsSnap.docs.reduce((acc, doc) => {
+      return acc + ((doc.data().messages && doc.data().messages.length) || 0);
+    }, 0);
+
+    res.render("profile", {
+      email:          userEmail,
+      name:           profile.name      || "",
+      bio:            profile.bio       || "",
+      createdAt:      profile.createdAt || null,
+      updatedAt:      profile.updatedAt || null,
+      totalChats,
+      totalMessages,
+      successMessage: req.query.saved === "1" ? "Profile saved successfully!" : null,
+      errorMessage:   null,
+    });
+  } catch (err) {
+    console.error("❌ PROFILE GET ERROR:", err.message);
+    res.status(500).send("Failed to load profile.");
+  }
+});
+
+// POST /profile/update
+router.post("/profile/update", requireAuth, async (req, res) => {
+  const db        = admin.firestore();
+  const userEmail = sanitizeEmail(req.user.email);
+  const name      = (req.body.name || "").trim();
+  const bio       = (req.body.bio  || "").trim();
+
+  // Validation — re-render with error so the user doesn't lose their input
+  if (!name || name.length < 2) {
+    try {
+      const chatsSnap = await db
+        .collection("users")
+        .doc(userEmail)
+        .collection("chats")
+        .get();
+
+      return res.render("profile", {
+        email:          userEmail,
+        name,
+        bio,
+        createdAt:      null,
+        updatedAt:      null,
+        totalChats:     chatsSnap.size,
+        totalMessages:  chatsSnap.docs.reduce(
+          (acc, doc) => acc + ((doc.data().messages?.length) || 0), 0
+        ),
+        successMessage: null,
+        errorMessage:   "Name must be at least 2 characters.",
+      });
+    } catch (e) {
+      return res.status(500).send("Validation failed.");
+    }
+  }
+
+  try {
+    const ref = db
+      .collection("users")
+      .doc(userEmail)
+      .collection("profile")
+      .doc("data");
+
+    const existing = await ref.get();
+
+    await ref.set(
+      {
+        name,
+        bio,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        ...(!existing.exists && {
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+      },
+      { merge: true }
+    );
+
+    console.log("✅ Profile saved for:", userEmail);
+    res.redirect("/profile?saved=1");
+  } catch (err) {
+    console.error("❌ PROFILE UPDATE ERROR:", err.message);
+    res.status(500).send("Failed to save profile.");
+  }
 });
 
 module.exports = router;
