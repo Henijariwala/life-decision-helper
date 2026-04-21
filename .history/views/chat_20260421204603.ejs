@@ -148,16 +148,29 @@
     }
 
     .messages::-webkit-scrollbar {
-      width: 6px;
+      width: 10px;
     }
 
     .messages::-webkit-scrollbar-track {
       background: var(--ivory);
+      border-radius: 5px;
+      margin: 0.5rem 0;
     }
 
     .messages::-webkit-scrollbar-thumb {
       background: var(--sage);
-      border-radius: 3px;
+      border-radius: 5px;
+      border: 2px solid var(--ivory);
+    }
+
+    .messages::-webkit-scrollbar-thumb:hover {
+      background: var(--green-soft);
+    }
+
+    /* For Firefox */
+    .messages {
+      scrollbar-width: thin;
+      scrollbar-color: var(--sage) var(--ivory);
     }
 
     .message {
@@ -386,6 +399,10 @@
       </a>
       <a href="/history" class="btn btn-secondary">
         <span>📚</span> History
+      </a>
+      <!-- ADDED: Profile link -->
+      <a href="/profile" class="btn btn-secondary">
+        <span>👤</span> Profile
       </a>
       <form action="/logout" method="POST" style="display: inline;">
         <button type="submit" class="btn btn-secondary">
